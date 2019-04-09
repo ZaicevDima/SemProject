@@ -14,6 +14,8 @@
 
 package com.naman14.timber.fragments;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -31,6 +33,7 @@ import com.afollestad.appthemeengine.prefs.ATEColorPreference;
 import com.afollestad.materialdialogs.color.ColorChooserDialog;
 import com.naman14.timber.R;
 import com.naman14.timber.activities.DonateActivity;
+import com.naman14.timber.activities.MainActivity;
 import com.naman14.timber.activities.SettingsActivity;
 import com.naman14.timber.dialogs.LastFmLoginDialog;
 import com.naman14.timber.lastfmapi.LastFmClient;
@@ -45,6 +48,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     private static final String LOCKSCREEN = "show_albumart_lockscreen";
     private static final String XPOSED = "toggle_xposed_trackselector";
+    private static final String RATING = "rating";
 
     private static final String KEY_ABOUT = "preference_about";
     private static final String KEY_SOURCE = "preference_source";
@@ -54,7 +58,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     private static final String KEY_START_PAGE = "start_page_preference";
     private boolean lastFMlogedin;
 
-    private Preference nowPlayingSelector,  lastFMlogin, lockscreen, xposed;
+    private Preference nowPlayingSelector,  lastFMlogin, lockscreen, xposed, rating;
 
     private SwitchPreference toggleAnimations;
     private ListPreference themePreference, startPagePreference;
@@ -73,6 +77,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         nowPlayingSelector = findPreference(NOW_PLAYING_SELECTOR);
 
         xposed = findPreference(XPOSED);
+        rating = findPreference(RATING);
 
         lastFMlogin = findPreference(LASTFM_LOGIN);
         updateLastFM();
@@ -154,8 +159,11 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         });
 
         lastFMlogin.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            private Preference preference;
+
             @Override
             public boolean onPreferenceClick(Preference preference) {
+                this.preference = preference;
                 if (lastFMlogedin) {
                     LastFmClient.getInstance(getActivity()).logout();
                     Bundle extras = new Bundle();
@@ -173,7 +181,37 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             }
         });
 
+        rating.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                if (rating.shouldDisableDependents()) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setTitle("Важное сообщение!")
+                            .setMessage("Галочка нажата!!!")
+                            .setCancelable(false)
+                            .setPositiveButton("Use new raiting",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.cancel();
+                                        }
+                                    })
+                            .setNegativeButton("Use old raiting",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.cancel();
+                                        }
+                                    });
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
+                return true;
+            }
+        });
     }
+
+
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
