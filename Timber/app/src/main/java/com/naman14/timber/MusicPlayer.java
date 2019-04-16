@@ -36,6 +36,7 @@ import android.widget.Toast;
 
 import com.naman14.timber.dataloaders.SongLoader;
 import com.naman14.timber.helpers.MusicPlaybackTrack;
+import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.utils.TimberUtils.IdType;
 
 import java.util.Arrays;
@@ -45,10 +46,12 @@ import static android.support.v4.content.PermissionChecker.checkSelfPermission;
 
 public class MusicPlayer {
 
+    private static Context context;
     private static final WeakHashMap<Context, ServiceBinder> mConnectionMap;
     private static final long[] sEmptyList;
     public static ITimberService mService = null;
     private static ContentValues[] mContentValuesCache = null;
+    private static RatingStore ratingStore;
 
     static {
         mConnectionMap = new WeakHashMap<Context, ServiceBinder>();
@@ -97,6 +100,7 @@ public class MusicPlayer {
         try {
             if (mService != null) {
                 mService.next();
+                ratingStore.setRainting((int) getCurrentAudioId(),6);
             }
         } catch (final RemoteException ignored) {
         }
@@ -761,6 +765,10 @@ public class MusicPlayer {
             } catch (final RemoteException ignored) {
             }
         }
+    }
+
+    public static void setContext(Context context) {
+        ratingStore = RatingStore.getInstance(context);
     }
 
     public static final class ServiceBinder implements ServiceConnection {

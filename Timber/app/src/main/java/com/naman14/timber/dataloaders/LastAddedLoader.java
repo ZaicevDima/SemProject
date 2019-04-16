@@ -44,8 +44,10 @@ public class LastAddedLoader {
                 int trackNumber = mCursor.getInt(5);
                 long artistId = mCursor.getInt(6);
                 long albumId = mCursor.getLong(7);
+                //int rating = mCursor.getInt(8);
 
                 final Song song = new Song(id, albumId, artistId, title, artist, album, duration, trackNumber);
+                //final Song song = new Song(id, albumId, artistId, title, artist, album, duration, trackNumber, rating);
 
                 mSongList.add(song);
             } while (mCursor.moveToNext());
@@ -73,6 +75,6 @@ public class LastAddedLoader {
         selection.append(cutoff);
 
         return context.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                new String[]{"_id", "title", "artist", "album", "duration", "track", "artist_id", "album_id"}, selection.toString(), null, MediaStore.Audio.Media.DATE_ADDED + " DESC");
+                new String[]{"_id", "title", "artist", "album", "duration", "track", "artist_id", "album_id", Song.RATING}, selection.toString(), null, MediaStore.Audio.Media.DATE_ADDED + " DESC");
     }
 }

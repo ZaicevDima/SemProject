@@ -5,6 +5,7 @@
 /build
 /captures
 /*.iml
+.rawproto
 
 /app/app-release.apk
 app/app.iml

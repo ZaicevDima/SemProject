@@ -24,6 +24,7 @@ import android.provider.MediaStore;
 import android.text.TextUtils;
 
 import com.naman14.timber.models.Song;
+import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.utils.PreferencesUtility;
 
 import java.util.ArrayList;
@@ -45,8 +46,11 @@ public class SongLoader {
                 int trackNumber = cursor.getInt(5);
                 long artistId = cursor.getInt(6);
                 long albumId = cursor.getLong(7);
+                int rating = cursor.getInt(8);
+
 
                 arrayList.add(new Song(id, albumId, artistId, title, artist, album, duration, trackNumber));
+                //arrayList.add(new Song(id, albumId, artistId, title, artist, album, duration, trackNumber, rating));
             }
             while (cursor.moveToNext());
         if (cursor != null)
@@ -54,7 +58,7 @@ public class SongLoader {
         return arrayList;
     }
 
-    public static Song getSongForCursor(Cursor cursor) {
+    public static Song getSongForCursor(Cursor cursor, Context context) {
         Song song = new Song();
         if ((cursor != null) && (cursor.moveToFirst())) {
             long id = cursor.getLong(0);
@@ -65,7 +69,10 @@ public class SongLoader {
             int trackNumber = cursor.getInt(5);
             long artistId = cursor.getInt(6);
             long albumId = cursor.getLong(7);
+            int rating = RatingStore.getInstance(context).getRating(id);
 
+
+            //song = new Song(id, albumId, artistId, title, artist, album, duration, trackNumber, rating);
             song = new Song(id, albumId, artistId, title, artist, album, duration, trackNumber);
         }
 
@@ -108,7 +115,7 @@ public class SongLoader {
         Cursor cursor = cr.query(uri, projection, selection + "=?", selectionArgs, sortOrder);
 
         if (cursor != null && cursor.getCount() > 0) {
-            Song song = getSongForCursor(cursor);
+            Song song = getSongForCursor(cursor, context);
             cursor.close();
             return song;
         }
@@ -125,7 +132,7 @@ public class SongLoader {
     }
 
     public static Song getSongForID(Context context, long id) {
-        return getSongForCursor(makeSongCursor(context, "_id=" + String.valueOf(id), null));
+        return getSongForCursor(makeSongCursor(context, "_id=" + String.valueOf(id), null), context);
     }
 
     public static List<Song> searchSongs(Context context, String searchString, int limit) {
@@ -148,7 +155,7 @@ public class SongLoader {
         if (!TextUtils.isEmpty(selection)) {
             selectionStatement = selectionStatement + " AND " + selection;
         }
-        return context.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, new String[]{"_id", "title", "artist", "album", "duration", "track", "artist_id", "album_id"}, selectionStatement, paramArrayOfString, sortOrder);
+        return context.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, new String[]{"_id", "title", "artist", "album", "duration", "track", "artist_id", "album_id", Song.RATING}, selectionStatement, paramArrayOfString, sortOrder);
 
     }
 
@@ -164,6 +171,7 @@ public class SongLoader {
                 mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM),
                 Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)),
                 0
+                //5
         );
     }
 

@@ -120,6 +120,7 @@ public class BaseActivity extends ATEActivity implements ServiceConnection, Musi
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        MusicPlayer.setContext(this);
         mToken = MusicPlayer.bindToService(this, this);
 
         mPlaybackStatus = new PlaybackStatus(this);

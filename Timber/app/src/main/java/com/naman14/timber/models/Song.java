@@ -14,7 +14,11 @@
 
 package com.naman14.timber.models;
 
+import android.provider.MediaStore;
+
 public class Song {
+
+    public static final String RATING = MediaStore.Audio.AudioColumns.BOOKMARK;
 
     public final long albumId;
     public final String albumName;
@@ -24,6 +28,7 @@ public class Song {
     public final long id;
     public final String title;
     public final int trackNumber;
+    public int rating;
 
     public Song() {
         this.id = -1;
@@ -34,7 +39,19 @@ public class Song {
         this.albumName = "";
         this.duration = -1;
         this.trackNumber = -1;
+        //this.rating = 5;
     }
+
+//    public Song(long _id, long _albumId, long _artistId, String _title, String _artistName, String _albumName, int _duration, int _trackNumber) {
+//        this.id = _id;
+//        this.albumId = _albumId;
+//        this.artistId = _artistId;
+//        this.title = _title;
+//        this.artistName = _artistName;
+//        this.albumName = _albumName;
+//        this.duration = _duration;
+//        this.trackNumber = _trackNumber;
+//    }
 
     public Song(long _id, long _albumId, long _artistId, String _title, String _artistName, String _albumName, int _duration, int _trackNumber) {
         this.id = _id;
@@ -45,5 +62,6 @@ public class Song {
         this.albumName = _albumName;
         this.duration = _duration;
         this.trackNumber = _trackNumber;
+        //this.rating = _rating;
     }
 }

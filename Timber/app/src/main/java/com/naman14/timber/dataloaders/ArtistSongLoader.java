@@ -40,8 +40,11 @@ public class ArtistSongLoader {
                 int trackNumber = cursor.getInt(5);
                 long albumId = cursor.getInt(6);
                 long artistId = artistID;
+                //int rating = cursor.getInt(8);
 
-                songsList.add(new Song(id, albumId, artistID, title, artist, album, duration, trackNumber));
+                //songsList.add(new Song(id, albumId, artistID, title, artist, album, duration, trackNumber, rating));
+
+                    songsList.add(new Song(id, albumId, artistID, title, artist, album, duration, trackNumber));
             }
             while (cursor.moveToNext());
         if (cursor != null)
@@ -55,7 +58,7 @@ public class ArtistSongLoader {
         final String artistSongSortOrder = PreferencesUtility.getInstance(context).getArtistSongSortOrder();
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String string = "is_music=1 AND title != '' AND artist_id=" + artistID;
-        return contentResolver.query(uri, new String[]{"_id", "title", "artist", "album", "duration", "track", "album_id"}, string, null, artistSongSortOrder);
+        return contentResolver.query(uri, new String[]{"_id", "title", "artist", "album", "duration", "track", "album_id", Song.RATING}, string, null, artistSongSortOrder);
     }
 
 }
