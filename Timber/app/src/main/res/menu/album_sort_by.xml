@@ -23,7 +23,7 @@
                 android:id="@+id/menu_sort_by_number_of_songs"
                 android:title="@string/sort_order_entry_number_of_songs"/>
             <item
-                android:id="@+id/menu_sort_by_rating_of_songs"
+                android:id="@+id/menu_sort_by_rating"
                 android:title="Rating"/>
         </menu>
     </item>

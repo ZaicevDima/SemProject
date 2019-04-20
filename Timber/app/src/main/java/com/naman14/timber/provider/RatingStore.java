@@ -11,6 +11,7 @@ public class RatingStore {
     private static final int MAX_ITEMS_IN_DB = 100;
 
     private static RatingStore sInstance = null;
+    private static boolean isTick = false;
 
     private MusicDB mMusicDatabase = null;
 
@@ -28,6 +29,14 @@ public class RatingStore {
             sInstance = new RatingStore(context.getApplicationContext());
         }
         return sInstance;
+    }
+
+    public static void setIsTick(boolean isTick) {
+        RatingStore.isTick = isTick;
+    }
+
+    public static boolean getIsTick() {
+        return isTick;
     }
 
 //    private RatingStore(Context applicationContext) {
@@ -75,7 +84,7 @@ public class RatingStore {
         }
     }
 
-    public void setRainting(int songId, int rating) {
+    public void setRating(int songId, int rating) {
         System.out.println("NEXT   " + songId + ' '  + rating + '\n' );
         final SQLiteDatabase database = mMusicDatabase.getWritableDatabase();
 

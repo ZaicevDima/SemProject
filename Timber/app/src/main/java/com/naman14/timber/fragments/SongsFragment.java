@@ -138,10 +138,10 @@ public class SongsFragment extends Fragment implements MusicStateListener {
                 mPreferences.setSongSortOrder(SortOrder.SongSortOrder.SONG_DURATION);
                 reloadAdapter();
                 return true;
-            case R.id.menu_sort_by_rating_of_songs:
+            /*case R.id.menu_sort_by_rating_of_songs:
                 mPreferences.setSongSortOrder(SortOrder.SongSortOrder.RATING);
                 reloadAdapter();
-                return true;
+                return false;*/
         }
         return super.onOptionsItemSelected(item);
     }
