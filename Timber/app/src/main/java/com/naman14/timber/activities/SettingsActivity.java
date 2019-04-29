@@ -78,7 +78,7 @@ public class SettingsActivity extends BaseThemedActivity implements ColorChooser
     public boolean onOptionsItemSelected(final MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                finish();  //????
+                finish();
                 return true;
             default:
                 break;

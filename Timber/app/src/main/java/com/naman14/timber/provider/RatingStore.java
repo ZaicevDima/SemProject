@@ -104,8 +104,3 @@ public class RatingStore {
     }
 }
 
-abstract class RatingStoreColumns {
-    static String NAME = "rating";
-    static String ID = "songid";
-    static String RATING = "songrating";
-}

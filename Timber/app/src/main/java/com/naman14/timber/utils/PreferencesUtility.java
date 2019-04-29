@@ -189,6 +189,10 @@ public final class PreferencesUtility {
         setSortOrder(SONG_SORT_ORDER, value);
     }
 
+    public void setSongRatingSortOrder(boolean isAscending) {
+
+    }
+
     public final boolean didNowplayingThemeChanged() {
         return mPreferences.getBoolean(NOW_PLAYNG_THEME_VALUE, false);
     }

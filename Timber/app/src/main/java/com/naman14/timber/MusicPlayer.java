@@ -44,6 +44,7 @@ import java.util.WeakHashMap;
 
 public class MusicPlayer {
 
+    public static final int RATING_DECISION_LIMIT_MS = 10_000;
     private static Context context;
     private static final WeakHashMap<Context, ServiceBinder> mConnectionMap;
     private static final long[] sEmptyList;
@@ -97,10 +98,14 @@ public class MusicPlayer {
     public static void next() {
         try {
             if (mService != null) {
-                mService.next();
-                if (SettingsFragment.rating.isChecked()) {
-                    ratingStore.setRating((int) getCurrentAudioId(), 6);
+                long position = position();
+                if (SettingsFragment.rating != null && SettingsFragment.rating.isChecked() && position <= RATING_DECISION_LIMIT_MS) {
+                    int songId = (int) getCurrentAudioId();
+                    ratingStore.setRating(songId, ratingStore.getRating(songId) - 1);
                 }
+                mService.next();
+                //System.out.println(position);
+
             }
         } catch (final RemoteException ignored) {
         }
@@ -118,10 +123,13 @@ public class MusicPlayer {
 
     public static void previous(final Context context, final boolean force) {
         final Intent previous = new Intent(context, MusicService.class);
+        int songId = (int) getCurrentAudioId();
         if (force) {
             previous.setAction(MusicService.PREVIOUS_FORCE_ACTION);
+            ratingStore.setRating(songId, ratingStore.getRating(songId) + 1);
         } else {
             previous.setAction(MusicService.PREVIOUS_ACTION);
+            ratingStore.setRating(songId, ratingStore.getRating(songId) + 2);
         }
         context.startService(previous);
     }

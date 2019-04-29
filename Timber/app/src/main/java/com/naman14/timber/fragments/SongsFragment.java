@@ -14,6 +14,8 @@
 
 package com.naman14.timber.fragments;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -33,6 +35,7 @@ import com.naman14.timber.adapters.SongsListAdapter;
 import com.naman14.timber.dataloaders.SongLoader;
 import com.naman14.timber.listeners.MusicStateListener;
 import com.naman14.timber.models.Song;
+import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.utils.PreferencesUtility;
 import com.naman14.timber.utils.SortOrder;
 import com.naman14.timber.widgets.BaseRecyclerView;
@@ -138,10 +141,33 @@ public class SongsFragment extends Fragment implements MusicStateListener {
                 mPreferences.setSongSortOrder(SortOrder.SongSortOrder.SONG_DURATION);
                 reloadAdapter();
                 return true;
-            /*case R.id.menu_sort_by_rating_of_songs:
-                mPreferences.setSongSortOrder(SortOrder.SongSortOrder.RATING);
-                reloadAdapter();
-                return false;*/
+            case R.id.menu_sort_by_rating_of_songs:
+                //mPreferences.setSongSortOrder(SortOrder.SongSortOrder.RATING);
+                //reloadAdapter();
+                if (SettingsFragment.rating != null && SettingsFragment.rating.isChecked()) {
+                    mPreferences.setSongSortOrder("rating");
+                    reloadAdapter();
+                } else {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setTitle("Error")
+                            .setMessage("Выберете рейтинг")
+                            .setCancelable(true)
+                            .setPositiveButton("Ok",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                        }
+                                    })
+                            .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                @Override
+                                public void onCancel(DialogInterface dialog) {
+                                }
+                            });
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
