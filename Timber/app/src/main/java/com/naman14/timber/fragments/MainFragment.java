@@ -42,6 +42,7 @@ public class MainFragment extends Fragment {
 
     private PreferencesUtility mPreferences;
     private ViewPager viewPager;
+    private SongsFragment songsFragment;
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -87,8 +88,9 @@ public class MainFragment extends Fragment {
     }
 
     private void setupViewPager(ViewPager viewPager) {
+        songsFragment = new SongsFragment();
         Adapter adapter = new Adapter(getChildFragmentManager());
-        adapter.addFragment(new SongsFragment(), this.getString(R.string.songs));
+        adapter.addFragment(songsFragment, this.getString(R.string.songs));
         adapter.addFragment(new AlbumFragment(), this.getString(R.string.albums));
         adapter.addFragment(new ArtistFragment(), this.getString(R.string.artists));
         viewPager.setAdapter(adapter);
@@ -113,6 +115,10 @@ public class MainFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+    }
+
+    public SongsFragment getSongsFragment() {
+        return songsFragment;
     }
 
     static class Adapter extends FragmentPagerAdapter {

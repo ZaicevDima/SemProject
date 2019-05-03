@@ -14,6 +14,7 @@
 
 package com.naman14.timber.fragments;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -38,6 +39,7 @@ import com.naman14.timber.activities.MainActivity;
 import com.naman14.timber.activities.SettingsActivity;
 import com.naman14.timber.dialogs.LastFmLoginDialog;
 import com.naman14.timber.lastfmapi.LastFmClient;
+import com.naman14.timber.provider.MusicDB;
 import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.utils.Constants;
 import com.naman14.timber.utils.NavigationUtils;
@@ -187,16 +189,21 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         rating.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
+                mPreferences.setRatingEnabled(false);
                 if (rating.shouldDisableDependents()) {
+
                     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    final Activity activity = getActivity();
                     builder.setTitle("Rating")
-                            .setMessage("Выберете рейтинг")
+                            .setMessage("Выберите рейтинг")
                             .setCancelable(true)
                             .setPositiveButton("Use new raiting",
                                     new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
-                                            RatingStore.setIsTick(true);
+                                            mPreferences.setRatingEnabled(true);
+                                            //RatingStore.setIsTick(true);
+                                            RatingStore.getInstance(getActivity()).recreate();
                                             dialog.dismiss();
                                         }
                                     })
@@ -204,7 +211,8 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                                     new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
-                                            RatingStore.setIsTick(true);
+                                            //RatingStore.setIsTick(true);
+                                            mPreferences.setRatingEnabled(true);
                                             dialog.dismiss();
                                         }
                                     })
@@ -212,9 +220,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
                                 @Override
                                 public void onCancel(DialogInterface dialog) {
-                                    if (rating.isChecked()) {
+                                    /*if (rating.isChecked()) {
                                         rating.setChecked(false);
-                                    }
+                                    }*/
                                 }
                             });
                     AlertDialog alert = builder.create();

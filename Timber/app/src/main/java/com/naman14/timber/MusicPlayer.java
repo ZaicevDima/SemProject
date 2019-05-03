@@ -26,20 +26,30 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.Preference;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
+import java.text.DateFormat;
 
 import com.naman14.timber.dataloaders.SongLoader;
 import com.naman14.timber.fragments.SettingsFragment;
 import com.naman14.timber.helpers.MusicPlaybackTrack;
 import com.naman14.timber.provider.RatingStore;
+import com.naman14.timber.utils.PreferencesUtility;
 import com.naman14.timber.utils.TimberUtils.IdType;
 
 import java.util.Arrays;
+import java.util.Date;
+import java.util.Random;
 import java.util.WeakHashMap;
 
 public class MusicPlayer {
@@ -99,13 +109,11 @@ public class MusicPlayer {
         try {
             if (mService != null) {
                 long position = position();
-                if (SettingsFragment.rating != null && SettingsFragment.rating.isChecked() && position <= RATING_DECISION_LIMIT_MS) {
+                if (PreferencesUtility.getInstance(context).isRatingEnabled() && position <= RATING_DECISION_LIMIT_MS) {
                     int songId = (int) getCurrentAudioId();
                     ratingStore.setRating(songId, ratingStore.getRating(songId) - 1);
                 }
                 mService.next();
-                //System.out.println(position);
-
             }
         } catch (final RemoteException ignored) {
         }
@@ -126,10 +134,14 @@ public class MusicPlayer {
         int songId = (int) getCurrentAudioId();
         if (force) {
             previous.setAction(MusicService.PREVIOUS_FORCE_ACTION);
-            ratingStore.setRating(songId, ratingStore.getRating(songId) + 1);
+            if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
+                ratingStore.setRating(songId, ratingStore.getRating(songId) + 1);
+            }
         } else {
             previous.setAction(MusicService.PREVIOUS_ACTION);
-            ratingStore.setRating(songId, ratingStore.getRating(songId) + 2);
+            if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
+                ratingStore.setRating(songId, ratingStore.getRating(songId) + 2);
+            }
         }
         context.startService(previous);
     }
@@ -529,8 +541,8 @@ public class MusicPlayer {
         try {
             mService.setShuffleMode(MusicService.SHUFFLE_NORMAL);
             if (getQueuePosition() == 0 && mService.getAudioId() == trackList[0] && Arrays.equals(trackList, getQueue())) {
-                    mService.play();
-                    return;
+                mService.play();
+                return;
             }
             mService.open(trackList, -1, -1, IdType.NA.mId);
             mService.play();
@@ -665,7 +677,7 @@ public class MusicPlayer {
     }
 
     public static void clearQueue() {
-        if (mService!=null) {
+        if (mService != null) {
             try {
                 mService.removeTracks(0, Integer.MAX_VALUE);
             } catch (final RemoteException ignored) {
@@ -778,6 +790,33 @@ public class MusicPlayer {
     public static void setContext(Context context) {
         ratingStore = RatingStore.getInstance(context);
     }
+
+    //@Override
+    //public void onRefresh() {
+        /*if (!PreferencesUtility.getInstance(context).isRatingEnabled()) {
+            return;
+        }*/
+            //Toast.makeText(this, R.string.refresh_started, Toast.LENGTH_SHORT).show();
+        //mSwipeRefreshLayout.setRefreshing(false);
+
+        /*new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Отменяем анимацию обновления
+                mSwipeRefreshLayout.setRefreshing(false);
+                Random random = new Random();
+            }
+        }, 4000 );*/
+        //String currentDateTime = DateFormat.getDateTimeInstance().format(new Date());
+        /*new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeRefreshLayout.setRefreshing(false);
+                // говорим о том, что собираемся закончить
+                //Toast.makeText(MainActivity.this, R.string.refresh_finished, Toast.LENGTH_SHORT).show();
+            }
+        }, 300);*/
+    //}
 
     public static final class ServiceBinder implements ServiceConnection {
         private final ServiceConnection mCallback;

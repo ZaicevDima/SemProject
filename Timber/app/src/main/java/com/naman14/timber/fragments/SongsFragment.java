@@ -86,7 +86,7 @@ public class SongsFragment extends Fragment implements MusicStateListener {
             mAdapter.notifyDataSetChanged();
     }
 
-    private void reloadAdapter() {
+    public void reloadAdapter() {
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(final Void... unused) {
@@ -144,13 +144,13 @@ public class SongsFragment extends Fragment implements MusicStateListener {
             case R.id.menu_sort_by_rating_of_songs:
                 //mPreferences.setSongSortOrder(SortOrder.SongSortOrder.RATING);
                 //reloadAdapter();
-                if (SettingsFragment.rating != null && SettingsFragment.rating.isChecked()) {
+                if (mPreferences.isRatingEnabled()) {
                     mPreferences.setSongSortOrder("rating");
                     reloadAdapter();
                 } else {
                     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                     builder.setTitle("Error")
-                            .setMessage("Выберете рейтинг")
+                            .setMessage("Выберите рейтинг")
                             .setCancelable(true)
                             .setPositiveButton("Ok",
                                     new DialogInterface.OnClickListener() {

@@ -26,6 +26,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,24 +34,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.afollestad.appthemeengine.customizers.ATEActivityThemeCustomizer;
 import com.anjlab.android.iab.v3.BillingProcessor;
-import com.google.android.gms.cast.framework.CastButtonFactory;
-import com.google.android.gms.cast.framework.CastContext;
-import com.google.android.gms.cast.framework.CastSession;
-import com.google.android.gms.cast.framework.Session;
-import com.google.android.gms.cast.framework.SessionManager;
-import com.google.android.gms.cast.framework.SessionManagerListener;
 import com.google.android.gms.cast.framework.media.widget.ExpandedControllerActivity;
-import com.google.android.gms.cast.framework.media.widget.MiniControllerFragment;
 import com.naman14.timber.MusicPlayer;
 import com.naman14.timber.R;
 import com.naman14.timber.cast.ExpandedControlsActivity;
-import com.naman14.timber.cast.SimpleSessionManagerListener;
-import com.naman14.timber.cast.WebServer;
 import com.naman14.timber.fragments.AlbumDetailFragment;
 import com.naman14.timber.fragments.ArtistDetailFragment;
 import com.naman14.timber.fragments.FoldersFragment;
@@ -64,15 +55,15 @@ import com.naman14.timber.subfragments.LyricsFragment;
 import com.naman14.timber.utils.Constants;
 import com.naman14.timber.utils.Helpers;
 import com.naman14.timber.utils.NavigationUtils;
+import com.naman14.timber.utils.PreferencesUtility;
 import com.naman14.timber.utils.TimberUtils;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends BaseActivity implements ATEActivityThemeCustomizer {
+public class MainActivity extends BaseActivity implements ATEActivityThemeCustomizer, SwipeRefreshLayout.OnRefreshListener {
 
     private SlidingUpPanelLayout panelLayout;
     private NavigationView navigationView;
@@ -83,15 +74,16 @@ public class MainActivity extends BaseActivity implements ATEActivityThemeCustom
     private Handler navDrawerRunnable = new Handler();
     private Runnable runnable;
     private DrawerLayout mDrawerLayout;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private boolean isDarkTheme;
+    private MainFragment fragment;
 
     private Runnable navigateLibrary = new Runnable() {
         public void run() {
             navigationView.getMenu().findItem(R.id.nav_library).setChecked(true);
-            Fragment fragment = new MainFragment();
+            fragment = new MainFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             transaction.replace(R.id.fragment_container, fragment).commitAllowingStateLoss();
-
         }
     };
 
@@ -225,7 +217,7 @@ public class MainActivity extends BaseActivity implements ATEActivityThemeCustom
 
         addBackstackListener();
 
-        if(Intent.ACTION_VIEW.equals(action)) {
+        if (Intent.ACTION_VIEW.equals(action)) {
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
@@ -238,7 +230,7 @@ public class MainActivity extends BaseActivity implements ATEActivityThemeCustom
             }, 350);
         }
 
-        if (!panelLayout.isPanelHidden() && MusicPlayer.getTrackName() == null ) {
+        if (!panelLayout.isPanelHidden() && MusicPlayer.getTrackName() == null) {
             panelLayout.hidePanel();
         }
 
@@ -261,6 +253,8 @@ public class MainActivity extends BaseActivity implements ATEActivityThemeCustom
             });
         }
 
+        mSwipeRefreshLayout = findViewById(R.id.rating_update);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
     }
 
     private void loadEverything() {
@@ -506,6 +500,28 @@ public class MainActivity extends BaseActivity implements ATEActivityThemeCustom
         findViewById(R.id.quickcontrols_container).setVisibility(View.VISIBLE);
 
         panelLayout.showPanel();
+    }
+
+    @Override
+    public void onRefresh() {
+        final PreferencesUtility mPreferences = PreferencesUtility.getInstance(this);//?
+        if (!mPreferences.isRatingEnabled()) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }, 500);
+            return;
+        }
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mPreferences.setSongSortOrder("rating");
+                fragment.getSongsFragment().reloadAdapter();
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 1000);
     }
 }
 

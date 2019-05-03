@@ -6,12 +6,11 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 public class RatingStore {
-
     private static final int DEFAULT = 5;
     private static final int MAX_ITEMS_IN_DB = 100;
 
     private static RatingStore sInstance = null;
-    private static boolean isTick = false;
+    //private static boolean isTick = false;
 
     private MusicDB mMusicDatabase = null;
 
@@ -31,13 +30,6 @@ public class RatingStore {
         return sInstance;
     }
 
-    public static void setIsTick(boolean isTick) {
-        RatingStore.isTick = isTick;
-    }
-
-    public static boolean getIsTick() {
-        return isTick;
-    }
 
 //    private RatingStore(Context applicationContext) {
 
@@ -47,7 +39,7 @@ public class RatingStore {
     public void onCreate(final SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + RatingStoreColumns.NAME + " ("
                 + RatingStoreColumns.ID + " LONG NOT NULL PRIMARY KEY," + RatingStoreColumns.RATING
-                + " LONG NOT NULL);");
+                + " LONG);");
     }
 
     public Cursor queryRatingIds(final String limit) {
@@ -78,6 +70,7 @@ public class RatingStore {
             if (ratings.getCount() > 1) {
                 throw new IllegalStateException("Unexpected count of ratings for the song " + songId);
             }
+            ratings.moveToFirst();
             return ratings.getInt(0);
         } finally {
             ratings.close();
@@ -101,6 +94,20 @@ public class RatingStore {
     }
 
     private void updateRating(int songId, int rating) {
+    }
+
+    public void recreate() {
+        SQLiteDatabase db = mMusicDatabase.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            db.execSQL("DROP TABLE IF EXISTS " + RatingStoreColumns.NAME);
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + RatingStoreColumns.NAME + " ("
+                    + RatingStoreColumns.ID + " LONG NOT NULL PRIMARY KEY," + RatingStoreColumns.RATING
+                    + " LONG);");
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 }
 

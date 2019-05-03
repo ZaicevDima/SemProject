@@ -36,6 +36,8 @@ public final class PreferencesUtility {
     public static final String ALBUM_SONG_SORT_ORDER = "album_song_sort_order";
     public static final String SONG_SORT_ORDER = "song_sort_order";
 
+    public static final String RATING_ENABLED = "rating_enabled";
+
     private static final String NOW_PLAYING_SELECTOR = "now_paying_selector";
     private static final String TOGGLE_ANIMATIONS = "toggle_animations";
     private static final String TOGGLE_SYSTEM_ANIMATIONS = "toggle_system_animations";
@@ -287,5 +289,17 @@ public final class PreferencesUtility {
     public boolean alwaysLoadAlbumImagesFromLastfm() {
         return mPreferences.getBoolean(ALWAYS_LOAD_ALBUM_IMAGES_LASTFM, false);
     }
+
+    public void setRatingEnabled(boolean value) {
+        mPreferences.edit()
+                .putBoolean(RATING_ENABLED, value)
+                .apply();
+    }
+
+    public boolean isRatingEnabled() {
+        return mPreferences.getBoolean(RATING_ENABLED, false);
+    }
+
+
 }
 

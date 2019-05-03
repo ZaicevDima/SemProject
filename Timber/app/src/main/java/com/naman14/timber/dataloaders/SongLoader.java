@@ -31,6 +31,7 @@ import com.naman14.timber.provider.MusicDB;
 import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.provider.RatingStoreColumns;
 import com.naman14.timber.utils.PreferencesUtility;
+import com.naman14.timber.utils.SortOrder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -157,7 +158,7 @@ public class SongLoader {
     }
 
     private static Cursor makeSongRatingCursor(Context context, String selection, String[] paramArrayOfString) {
-        Cursor cursor = makeSongCursor(context, selection, paramArrayOfString, null);
+        Cursor cursor = makeSongCursor(context, selection, paramArrayOfString, SortOrder.SongSortOrder.SONG_A_Z);
         MusicDB musicDB = MusicDB.getInstance(context);
         SQLiteDatabase db = musicDB.getWritableDatabase();
         db.execSQL("DROP TABLE IF EXISTS temp_table");
@@ -186,7 +187,10 @@ public class SongLoader {
             cursor.moveToNext();
         }
         cursor.close();
-        String query = "SELECT _id, title, artist, album, duration, track, artist_id, album_id FROM temp_table LEFT JOIN " + RatingStoreColumns.NAME + " ON temp_table._id = " + RatingStoreColumns.ID + " ORDER BY IFNULL(" + RatingStoreColumns.RATING + ", 5) DESC,  title;";
+        String query = "SELECT _id, title, artist, album, duration, track, artist_id, album_id" +
+                " FROM temp_table LEFT JOIN " + RatingStoreColumns.NAME +
+                " ON temp_table._id = " + RatingStoreColumns.ID +
+                " ORDER BY IFNULL(" + RatingStoreColumns.RATING + ", 5) DESC;";
         //String query2 = "SELECT COUNT(" + RatingStoreColumns.ID + ") FROM " + RatingStoreColumns.NAME  + ";" ;
 
 
