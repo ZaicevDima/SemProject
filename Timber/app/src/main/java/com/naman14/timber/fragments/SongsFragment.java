@@ -18,6 +18,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -45,11 +46,13 @@ import com.naman14.timber.widgets.FastScroller;
 
 import java.util.List;
 
-public class SongsFragment extends Fragment implements MusicStateListener {
+public class SongsFragment extends Fragment implements MusicStateListener, SwipeRefreshLayout.OnRefreshListener {
 
     private SongsListAdapter mAdapter;
     private BaseRecyclerView recyclerView;
     private PreferencesUtility mPreferences;;
+
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -70,6 +73,9 @@ public class SongsFragment extends Fragment implements MusicStateListener {
 
         new loadSongs().execute("");
         ((BaseActivity) getActivity()).setMusicStateListenerListener(this);
+
+        mSwipeRefreshLayout = rootView.findViewById(R.id.rating_update);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
 
         return rootView;
     }
@@ -171,6 +177,28 @@ public class SongsFragment extends Fragment implements MusicStateListener {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onRefresh() {
+        final PreferencesUtility mPreferences = PreferencesUtility.getInstance(getActivity());//?
+        if (!mPreferences.isRatingEnabled()) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }, 500);
+            return;
+        }
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mPreferences.setSongSortOrder("rating");
+                reloadAdapter();
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 1000);
     }
 
     private class loadSongs extends AsyncTask<String, Void, String> {

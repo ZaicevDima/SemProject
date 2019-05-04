@@ -51,10 +51,12 @@ import com.naman14.timber.widgets.MultiViewPager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlaylistFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class PlaylistFragment extends Fragment {
 
     private int playlistcount;
     private FragmentStatePagerAdapter adapter;
+    private SongsFragment songsFragment;
+
     private MultiViewPager pager;
     private RecyclerView recyclerView;
     private GridLayoutManager layoutManager;
@@ -66,8 +68,6 @@ public class PlaylistFragment extends Fragment implements SwipeRefreshLayout.OnR
     private boolean showAuto;
     private PlaylistAdapter mAdapter;
 
-    private SwipeRefreshLayout mSwipeRefreshLayout;
-
     private List<Playlist> playlists = new ArrayList<>();
 
     @Override
@@ -78,8 +78,6 @@ public class PlaylistFragment extends Fragment implements SwipeRefreshLayout.OnR
         isDefault = mPreferences.getPlaylistView() == Constants.PLAYLIST_VIEW_DEFAULT;
         showAuto = mPreferences.showAutoPlaylist();
 
-        mSwipeRefreshLayout = mSwipeRefreshLayout.findViewById(R.id.rating_update);;
-        mSwipeRefreshLayout.setOnRefreshListener(this);
     }
 
     @Override
@@ -174,29 +172,6 @@ public class PlaylistFragment extends Fragment implements SwipeRefreshLayout.OnR
         layoutManager.requestLayout();
         setItemDecoration();
     }
-
-    @Override
-    public void onRefresh() {
-        //final PreferencesUtility mPreferences = PreferencesUtility.getInstance(this);//?
-        if (!mPreferences.isRatingEnabled()) {
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mSwipeRefreshLayout.setRefreshing(false);
-                }
-            }, 500);
-            return;
-        }
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mPreferences.setSongSortOrder("rating");
-                //this.getSongsFragment().reloadAdapter();
-                mSwipeRefreshLayout.setRefreshing(false);
-            }
-        }, 1000);
-    }
-
 
     public class SpacesItemDecoration extends RecyclerView.ItemDecoration {
         private int space;
