@@ -8,14 +8,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/rating_update"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
     <include layout="@layout/include_list_viewpager" />
-
-    </android.support.v4.widget.SwipeRefreshLayout>
 
     <android.support.design.widget.NavigationView
         android:id="@+id/nav_view"

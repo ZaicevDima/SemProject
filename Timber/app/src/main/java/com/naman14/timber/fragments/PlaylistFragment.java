@@ -23,6 +23,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -50,7 +51,7 @@ import com.naman14.timber.widgets.MultiViewPager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlaylistFragment extends Fragment {
+public class PlaylistFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private int playlistcount;
     private FragmentStatePagerAdapter adapter;
@@ -65,6 +66,8 @@ public class PlaylistFragment extends Fragment {
     private boolean showAuto;
     private PlaylistAdapter mAdapter;
 
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+
     private List<Playlist> playlists = new ArrayList<>();
 
     @Override
@@ -75,6 +78,8 @@ public class PlaylistFragment extends Fragment {
         isDefault = mPreferences.getPlaylistView() == Constants.PLAYLIST_VIEW_DEFAULT;
         showAuto = mPreferences.showAutoPlaylist();
 
+        mSwipeRefreshLayout = mSwipeRefreshLayout.findViewById(R.id.rating_update);;
+        mSwipeRefreshLayout.setOnRefreshListener(this);
     }
 
     @Override
@@ -168,6 +173,28 @@ public class PlaylistFragment extends Fragment {
         layoutManager.setSpanCount(column);
         layoutManager.requestLayout();
         setItemDecoration();
+    }
+
+    @Override
+    public void onRefresh() {
+        //final PreferencesUtility mPreferences = PreferencesUtility.getInstance(this);//?
+        if (!mPreferences.isRatingEnabled()) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }, 500);
+            return;
+        }
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mPreferences.setSongSortOrder("rating");
+                //this.getSongsFragment().reloadAdapter();
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 1000);
     }
 
 
