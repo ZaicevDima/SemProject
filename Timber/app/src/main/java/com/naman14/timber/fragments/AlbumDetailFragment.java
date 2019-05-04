@@ -339,6 +339,9 @@ public class AlbumDetailFragment extends Fragment {
                 mPreferences.setAlbumSongSortOrder(SortOrder.AlbumSongSortOrder.SONG_TRACK_LIST);
                 reloadAdapter();
                 return true;
+            case R.id.menu_sort_by_rating_of_songs:
+                //mPreferences.setAlbumSongSortOrder(SortOrder.AlbumSongSortOrder.RATING);
+                //reloadAdapter();
         }
         return super.onOptionsItemSelected(item);
     }

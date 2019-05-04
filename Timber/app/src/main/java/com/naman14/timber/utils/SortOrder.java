@@ -121,6 +121,8 @@ public final class SortOrder {
 
         /* Album song sort order filename */
         String SONG_FILENAME = SongSortOrder.SONG_FILENAME;
+
+        String RATING = "rating";
     }
 
     /**
