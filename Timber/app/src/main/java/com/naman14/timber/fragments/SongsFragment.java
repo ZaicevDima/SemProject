@@ -23,7 +23,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -37,7 +36,6 @@ import com.naman14.timber.adapters.SongsListAdapter;
 import com.naman14.timber.dataloaders.SongLoader;
 import com.naman14.timber.listeners.MusicStateListener;
 import com.naman14.timber.models.Song;
-import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.utils.PreferencesUtility;
 import com.naman14.timber.utils.SortOrder;
 import com.naman14.timber.widgets.BaseRecyclerView;
@@ -63,9 +61,9 @@ public class SongsFragment extends Fragment implements MusicStateListener, Swipe
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(
-                R.layout.fragment_recyclerview, container, false);
+                R.layout.fragment_songs, container, false);
 
-        recyclerView = rootView.findViewById(R.id.recyclerview);
+        recyclerView = rootView.findViewById(R.id.fragment_songs);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setEmptyView(getActivity(), rootView.findViewById(R.id.list_empty), "No media found");
         FastScroller fastScroller =  rootView.findViewById(R.id.fastscroller);
