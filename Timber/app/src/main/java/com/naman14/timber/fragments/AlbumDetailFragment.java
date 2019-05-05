@@ -15,6 +15,7 @@ package com.naman14.timber.fragments;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -25,6 +26,7 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
@@ -340,8 +342,9 @@ public class AlbumDetailFragment extends Fragment {
                 reloadAdapter();
                 return true;
             case R.id.menu_sort_by_rating_of_songs:
-                //mPreferences.setAlbumSongSortOrder(SortOrder.AlbumSongSortOrder.RATING);
-                //reloadAdapter();
+                mPreferences.setAlbumSongSortOrder(SortOrder.AlbumSongSortOrder.RATING);
+                reloadAdapter();
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }

@@ -15,13 +15,18 @@
 package com.naman14.timber.dataloaders;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.MediaStore;
 
 import com.naman14.timber.models.Song;
+import com.naman14.timber.provider.MusicDB;
+import com.naman14.timber.provider.RatingStoreColumns;
 import com.naman14.timber.utils.PreferencesUtility;
+import com.naman14.timber.utils.SortOrder;
 
 import java.util.ArrayList;
 
@@ -47,8 +52,6 @@ public class AlbumSongLoader {
                 }
                 long artistId = cursor.getInt(6);
                 long albumId = albumID;
-                //int rating = cursor.getInt(8);
-                //arrayList.add(new Song(id, albumId, artistId, title, artist, album, duration, trackNumber, rating));
 
                 arrayList.add(new Song(id, albumId, artistId, title, artist, album, duration, trackNumber));
             }
@@ -58,12 +61,58 @@ public class AlbumSongLoader {
         return arrayList;
     }
 
-    public static Cursor makeAlbumSongCursor(Context context, long albumID) {
+    private static Cursor makeAlbumSongCursor(Context context, long albumID) {
         ContentResolver contentResolver = context.getContentResolver();
         final String albumSongSortOrder = PreferencesUtility.getInstance(context).getAlbumSongSortOrder();
+
+        if (albumSongSortOrder.equals("rating")) {
+            return makeAlbumSongRatingCursor(context, albumID);
+        }
+
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String string = "is_music=1 AND title != '' AND album_id=" + albumID;
-        Cursor cursor = contentResolver.query(uri, new String[]{"_id", "title", "artist", "album", "duration", "track", "artist_id", Song.RATING}, string, null, albumSongSortOrder);
+        Cursor cursor = contentResolver.query(uri, new String[]{"_id", "title", "artist", "album", "duration", "track", "artist_id"}, string, null, albumSongSortOrder);
         return cursor;
+    }
+
+    private static Cursor makeAlbumSongRatingCursor(Context context, long albumID) {
+        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        String string = "is_music=1 AND title != '' AND album_id=" + albumID;
+        Cursor cursor = context.getContentResolver().query(uri, new String[]{"_id", "title", "artist", "album", "duration", "track", "artist_id"}, string, null, SortOrder.AlbumSortOrder.ALBUM_A_Z);
+
+        MusicDB musicDB = MusicDB.getInstance(context);
+        SQLiteDatabase db = musicDB.getWritableDatabase();
+        db.execSQL("DROP TABLE IF EXISTS temp_table");
+        db.execSQL("CREATE TEMP TABLE IF NOT EXISTS " + "temp_table" + " ("
+                + MediaStore.Audio.AudioColumns._ID + " LONG NOT NULL PRIMARY KEY,"
+                + MediaStore.Audio.AudioColumns.TITLE + " STRING NOT NULL,"
+                + MediaStore.Audio.AudioColumns.ARTIST + " STRING NOT NULL,"
+                + MediaStore.Audio.AudioColumns.ALBUM + " STRING NOT NULL,"
+                + MediaStore.Audio.AudioColumns.DURATION + " LONG NOT NULL,"
+                + MediaStore.Audio.AudioColumns.TRACK + " STRING NOT NULL,"
+                + MediaStore.Audio.AudioColumns.ARTIST_ID + " LONG NOT NULL);"
+        );
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put("_id", cursor.getLong(0));
+            contentValues.put("title", cursor.getString(1));
+            contentValues.put("artist", cursor.getString(2));
+            contentValues.put("album", cursor.getString(3));
+            contentValues.put("duration", cursor.getLong(4));
+            contentValues.put("track", cursor.getString(5));
+            contentValues.put("artist_id", cursor.getLong(6));
+            db.insert("temp_table", null, contentValues);
+            cursor.moveToNext();
+        }
+
+        cursor.close();
+
+        String query = "SELECT _id, title, artist, album, duration, track, artist_id" +
+                " FROM temp_table LEFT JOIN " + RatingStoreColumns.NAME +
+                " ON temp_table._id = " + RatingStoreColumns.ID +
+                " ORDER BY IFNULL(" + RatingStoreColumns.RATING + ", 5) DESC;";
+
+        return db.rawQuery(query, null);
     }
 }
