@@ -23,6 +23,7 @@ import android.os.Handler;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
@@ -39,6 +40,7 @@ import com.afollestad.appthemeengine.ATE;
 import com.naman14.timber.MusicPlayer;
 import com.naman14.timber.R;
 import com.naman14.timber.adapters.ArtistSongAdapter;
+import com.naman14.timber.dataloaders.AlbumSongLoader;
 import com.naman14.timber.dataloaders.ArtistLoader;
 import com.naman14.timber.dataloaders.ArtistSongLoader;
 import com.naman14.timber.dialogs.AddPlaylistDialog;
@@ -52,6 +54,8 @@ import com.naman14.timber.utils.ATEUtils;
 import com.naman14.timber.utils.Constants;
 import com.naman14.timber.utils.Helpers;
 import com.naman14.timber.utils.ImageUtils;
+import com.naman14.timber.utils.PreferencesUtility;
+import com.naman14.timber.utils.SortOrder;
 import com.naman14.timber.utils.TimberUtils;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -59,13 +63,14 @@ import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListene
 
 import java.util.List;
 
-public class ArtistDetailFragment extends Fragment {
+public class ArtistDetailFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private long artistID = -1;
     private ImageView artistArt;
     private Toolbar toolbar;
     private CollapsingToolbarLayout collapsingToolbarLayout;
     private AppBarLayout appBarLayout;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private boolean largeImageLoaded = false;
     private int primaryColor = -1;
     private ArtistSongAdapter mAdapter;
@@ -110,6 +115,8 @@ public class ArtistDetailFragment extends Fragment {
 
         getChildFragmentManager().beginTransaction().replace(R.id.container, ArtistMusicFragment.newInstance(artistID)).commit();
 
+        mSwipeRefreshLayout = rootView.findViewById(R.id.rating_update);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
 
         return rootView;
     }
@@ -237,6 +244,45 @@ public class ArtistDetailFragment extends Fragment {
             ATEUtils.setStatusBarColor(getActivity(), ateKey, primaryColor);
         }
 
+    }
+
+    @Override
+    public void onRefresh() {
+        final PreferencesUtility mPreferences = PreferencesUtility.getInstance(getActivity());
+        if (!mPreferences.isRatingEnabled()) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }, 500);
+            return;
+        }
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mPreferences.setAlbumSongSortOrder("rating");
+                reloadAdapter();
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 1000);
+    }
+
+    private void reloadAdapter() {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(final Void... unused) {
+                //List<Song> songList = AlbumSongLoader.getSongsForArtist(getActivity(), artistID);
+                List<Song> songList = ArtistSongLoader.getSongsForArtist(getActivity(),artistID);
+                mAdapter.updateDataSet(songList);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                mAdapter.notifyDataSetChanged();
+            }
+        }.execute();
     }
 
     private class setBlurredAlbumArt extends AsyncTask<Bitmap, Void, Drawable> {

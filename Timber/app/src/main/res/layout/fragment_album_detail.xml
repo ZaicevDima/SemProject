@@ -107,17 +107,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipToPadding="false"
-            android:paddingTop="10dp"
-            />
+            android:paddingTop="10dp" />
     </android.support.v4.widget.SwipeRefreshLayout>
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab"
-            style="@style/FabStyle"
-            android:tag="bg_tint_accent_color"
-            android:visibility="gone"
-            app:layout_anchor="@id/app_bar"
-            app:layout_anchorGravity="bottom|right|end" />
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        style="@style/FabStyle"
+        android:tag="bg_tint_accent_color"
+        android:visibility="gone"
+        app:layout_anchor="@id/app_bar"
+        app:layout_anchorGravity="bottom|right|end" />
 </android.support.design.widget.CoordinatorLayout>
 
 
