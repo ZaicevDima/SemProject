@@ -179,7 +179,7 @@ public class SongsFragment extends Fragment implements MusicStateListener, Swipe
 
     @Override
     public void onRefresh() {
-        final PreferencesUtility mPreferences = PreferencesUtility.getInstance(getActivity());//?
+        final PreferencesUtility mPreferences = PreferencesUtility.getInstance(getActivity());
         if (!mPreferences.isRatingEnabled()) {
             new Handler().postDelayed(new Runnable() {
                 @Override
