@@ -24,6 +24,7 @@ import android.provider.MediaStore;
 
 import com.naman14.timber.models.Song;
 import com.naman14.timber.provider.MusicDB;
+import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.provider.RatingStoreColumns;
 import com.naman14.timber.utils.PreferencesUtility;
 import com.naman14.timber.utils.SortOrder;
@@ -111,7 +112,7 @@ public class AlbumSongLoader {
         String query = "SELECT _id, title, artist, album, duration, track, artist_id" +
                 " FROM temp_table LEFT JOIN " + RatingStoreColumns.NAME +
                 " ON temp_table._id = " + RatingStoreColumns.ID +
-                " ORDER BY IFNULL(" + RatingStoreColumns.RATING + ", 5) DESC;";
+                " ORDER BY IFNULL(" + RatingStoreColumns.RATING + "," + RatingStore.DEFAULT + ") DESC;";
 
         return db.rawQuery(query, null);
     }

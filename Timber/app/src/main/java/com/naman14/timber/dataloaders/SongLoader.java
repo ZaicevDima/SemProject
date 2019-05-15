@@ -190,7 +190,7 @@ public class SongLoader {
         String query = "SELECT _id, title, artist, album, duration, track, artist_id, album_id" +
                 " FROM temp_table LEFT JOIN " + RatingStoreColumns.NAME +
                 " ON temp_table._id = " + RatingStoreColumns.ID +
-                " ORDER BY IFNULL(" + RatingStoreColumns.RATING + ", 5) DESC;";
+                " ORDER BY IFNULL(" + RatingStoreColumns.RATING + "," + RatingStore.DEFAULT + ") DESC;";
         //String query2 = "SELECT COUNT(" + RatingStoreColumns.ID + ") FROM " + RatingStoreColumns.NAME  + ";" ;
 
 
