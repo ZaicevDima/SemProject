@@ -47,6 +47,7 @@ public class ArtistSongAdapter extends BaseSongAdapter<ArtistSongAdapter.ItemHol
     private Activity mContext;
     private long artistID;
     private long[] songIDs;
+    private static RecyclerView recyclerView;
 
     public ArtistSongAdapter(Activity context, List<Song> arraylist, long artistID) {
         this.arraylist = arraylist;
@@ -152,6 +153,7 @@ public class ArtistSongAdapter extends BaseSongAdapter<ArtistSongAdapter.ItemHol
 
     private void setUpAlbums(RecyclerView albumsRecyclerview) {
 
+        recyclerView = albumsRecyclerview;
         albumsRecyclerview.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.HORIZONTAL, false));
         albumsRecyclerview.setHasFixedSize(true);
 
@@ -201,6 +203,10 @@ public class ArtistSongAdapter extends BaseSongAdapter<ArtistSongAdapter.ItemHol
             viewType = 0;
         } else viewType = 1;
         return viewType;
+    }
+
+    public static RecyclerView getRecyclerView() {
+        return recyclerView;
     }
 
     public class ItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

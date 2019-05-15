@@ -197,6 +197,8 @@ public class MusicPlayer {
                     case MusicService.SHUFFLE_AUTO:
                         mService.setShuffleMode(MusicService.SHUFFLE_NONE);
                         break;
+                    case MusicService.SHUFFLE_RATING:
+                        mService.setShuffleMode(MusicService.SHUFFLE_RATING);
                     default:
                         break;
                 }
