@@ -16,12 +16,14 @@
 package com.naman14.timber;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
@@ -51,6 +53,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
 import java.util.WeakHashMap;
+
+import static android.app.PendingIntent.getActivity;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 public class MusicPlayer {
 
@@ -111,12 +117,45 @@ public class MusicPlayer {
                 long position = position();
                 if (PreferencesUtility.getInstance(context).isRatingEnabled() && position <= RATING_DECISION_LIMIT_MS) {
                     int songId = (int) getCurrentAudioId();
-                    ratingStore.setRating(songId, ratingStore.getRating(songId) - 1);
+                    ratingStore.setRating(songId, max(ratingStore.getRating(songId) - 1, RatingStore.MINVALUE));
+                    if (ratingStore.getRating(songId) == RatingStore.MINVALUE) {
+                        removeTrackDialog(songId);
+                    }
                 }
                 mService.next();
             }
         } catch (final RemoteException ignored) {
         }
+    }
+
+    private static void removeTrackDialog(final int songId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Remove track")
+                .setMessage("Do you want to delete this track?")
+                .setCancelable(true)
+                .setPositiveButton("Yes",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                removeTrack(songId);
+                                dialog.dismiss();
+                            }
+                        })
+                .setNegativeButton("No",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                ratingStore.setRating(songId, RatingStore.MINVALUE + 1);
+                                dialog.dismiss();
+                            }
+                        })
+                .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
     public static void initPlaybackServiceWithSettings(final Context context) {
@@ -135,12 +174,12 @@ public class MusicPlayer {
         if (force) {
             previous.setAction(MusicService.PREVIOUS_FORCE_ACTION);
             if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
-                ratingStore.setRating(songId, ratingStore.getRating(songId) + 1);
+                ratingStore.setRating(songId, min(ratingStore.getRating(songId) + 2, RatingStore.MAXVALUE));
             }
         } else {
             previous.setAction(MusicService.PREVIOUS_ACTION);
             if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
-                ratingStore.setRating(songId, ratingStore.getRating(songId) + 2);
+                ratingStore.setRating((int)getPreviousAudioId(), min(ratingStore.getRating((int)getPreviousAudioId()) + 1, RatingStore.MAXVALUE));
             }
         }
         context.startService(previous);

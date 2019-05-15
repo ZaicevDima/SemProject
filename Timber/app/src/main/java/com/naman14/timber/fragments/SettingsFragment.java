@@ -202,7 +202,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             mPreferences.setRatingEnabled(true);
-                                            //RatingStore.setIsTick(true);
                                             RatingStore.getInstance(getActivity()).recreate();
                                             dialog.dismiss();
                                         }
@@ -211,7 +210,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                                     new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
-                                            //RatingStore.setIsTick(true);
                                             mPreferences.setRatingEnabled(true);
                                             dialog.dismiss();
                                         }
@@ -220,9 +218,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
                                 @Override
                                 public void onCancel(DialogInterface dialog) {
-                                    /*if (rating.isChecked()) {
-                                        rating.setChecked(false);
-                                    }*/
                                 }
                             });
                     AlertDialog alert = builder.create();

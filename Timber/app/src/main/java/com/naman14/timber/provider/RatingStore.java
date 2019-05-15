@@ -7,7 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 
 public class RatingStore {
     private static final int DEFAULT = 5;
-    private static final int MAX_ITEMS_IN_DB = 100;
+    public static final int MAXVALUE = 10;
+    public static final int MINVALUE = 0;
+
 
     private static RatingStore sInstance = null;
     //private static boolean isTick = false;
