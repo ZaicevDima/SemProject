@@ -132,6 +132,7 @@ public class MusicService extends Service {
     public static final int SHUFFLE_NONE = 0;
     public static final int SHUFFLE_NORMAL = 1;
     public static final int SHUFFLE_AUTO = 2;
+    public static final int SHUFFLE_RATING = 3;
     public static final int REPEAT_NONE = 0;
     public static final int REPEAT_CURRENT = 1;
     public static final int REPEAT_ALL = 2;
@@ -996,6 +997,32 @@ public class MusicService extends Service {
         } else if (mShuffleMode == SHUFFLE_AUTO) {
             doAutoShuffleUpdate();
             return mPlayPos + 1;
+        } else if (mShuffleMode == SHUFFLE_RATING) {
+            /*int size = 0;
+
+            mCursor.moveToFirst();
+            while (!mCursor.isAfterLast()) {
+                long id = mCursor.getLong(IDCOLIDX);
+                int rating = RatingStore.getInstance(this).getRating(id);
+                size += rating;
+                mCursor.moveToNext();
+            }
+
+
+            long[] trackIndexes = new long[size];
+
+            mCursor.moveToFirst();
+            for (int i = 0; i < size; i++) {
+                long id = mCursor.getLong(IDCOLIDX);
+                int rating = RatingStore.getInstance(this).getRating(id);
+                for (int j = 0; j < rating; j++) {
+                    trackIndexes[i + j] = id;
+                }
+                i += rating;
+            }
+
+            int randomIndex = (int) (Math.random() * size);
+            return (int) trackIndexes[randomIndex];
         } else {
             if (mPlayPos >= mPlaylist.size() - 1) {
                 if (mRepeatMode == REPEAT_NONE && !force) {
@@ -1006,8 +1033,62 @@ public class MusicService extends Service {
                 return -1;
             } else {
                 return mPlayPos + 1;
+            }*/
+            final int numTracks = mPlaylist.size();
+
+
+            final int[] trackNumPlays = new int[numTracks];
+            for (int i = 0; i < numTracks; i++) {
+                trackNumPlays[i] = 0;
             }
+
+
+            final int numHistory = mHistory.size();
+            for (int i = 0; i < numHistory; i++) {
+                final int idx = mHistory.get(i).intValue();
+                if (idx >= 0 && idx < numTracks) {
+                    trackNumPlays[idx]++;
+                }
+            }
+
+            if (mPlayPos >= 0 && mPlayPos < numTracks) {
+                trackNumPlays[mPlayPos]++;
+            }
+
+            int minNumPlays = Integer.MAX_VALUE;
+            int numTracksWithMinNumPlays = 0;
+            for (int i = 0; i < trackNumPlays.length; i++) {
+                if (trackNumPlays[i] < minNumPlays) {
+                    minNumPlays = trackNumPlays[i];
+                    numTracksWithMinNumPlays = 1;
+                } else if (trackNumPlays[i] == minNumPlays) {
+                    numTracksWithMinNumPlays++;
+                }
+            }
+
+
+            if (minNumPlays > 0 && numTracksWithMinNumPlays == numTracks
+                    && mRepeatMode != REPEAT_ALL && !force) {
+                return -1;
+            }
+
+
+            int skip = mShuffler.nextInt(numTracksWithMinNumPlays);
+            for (int i = 0; i < trackNumPlays.length; i++) {
+                if (trackNumPlays[i] == minNumPlays) {
+                    if (skip == 0) {
+                        return i;
+                    } else {
+                        skip--;
+                    }
+                }
+            }
+
+            if (D)
+                Log.e(TAG, "Getting the next position resulted did not get a result when it should have");
+            return -1;
         }
+        return mPlayPos + 1;
     }
 
     private void setNextTrack() {
@@ -1429,15 +1510,30 @@ public class MusicService extends Service {
             mRepeatMode = repmode;
 
             int shufmode = mPreferences.getInt("shufflemode", SHUFFLE_NONE);
-            if (shufmode != SHUFFLE_AUTO && shufmode != SHUFFLE_NORMAL) {
-                shufmode = SHUFFLE_NONE;
-            }
-            if (shufmode != SHUFFLE_NONE) {
-                mHistory = mPlaybackStateStore.getHistory(mPlaylist.size());
-            }
-            if (shufmode == SHUFFLE_AUTO) {
-                if (!makeAutoShuffleList()) {
+            if (!PreferencesUtility.getInstance(this).isRatingEnabled()) {
+
+                if (shufmode != SHUFFLE_AUTO && shufmode != SHUFFLE_NORMAL) {
                     shufmode = SHUFFLE_NONE;
+                }
+                if (shufmode != SHUFFLE_NONE) {
+                    mHistory = mPlaybackStateStore.getHistory(mPlaylist.size());
+                }
+                if (shufmode == SHUFFLE_AUTO) {
+                    if (!makeAutoShuffleList()) {
+                        shufmode = SHUFFLE_NONE;
+                    }
+                }
+            } else {
+                if (shufmode != SHUFFLE_RATING && shufmode != SHUFFLE_NORMAL) {
+                    shufmode = SHUFFLE_NONE;
+                }
+                if (shufmode != SHUFFLE_NONE) {
+                    mHistory = mPlaybackStateStore.getHistory(mPlaylist.size());
+                }
+                if (shufmode == SHUFFLE_RATING) {
+                    if (!makeAutoShuffleList()) {
+                        shufmode = SHUFFLE_NONE;
+                    }
                 }
             }
             mShuffleMode = shufmode;
@@ -1595,12 +1691,19 @@ public class MusicService extends Service {
                 } else {
                     mShuffleMode = SHUFFLE_NONE;
                 }
-            } else {
+            } else if (mShuffleMode == SHUFFLE_RATING) {
+                setNextTrack();
+            }
+            else {
                 setNextTrack();
             }
             saveQueue(false);
             notifyChange(SHUFFLEMODE_CHANGED);
         }
+    }
+
+    private void setNextRatingTrack() {
+        setNextTrack(getNextPosition(false));
     }
 
     public int getRepeatMode() {

@@ -18,6 +18,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -26,6 +27,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -57,6 +59,7 @@ import com.naman14.timber.fragments.FoldersFragment;
 import com.naman14.timber.fragments.MainFragment;
 import com.naman14.timber.fragments.PlaylistFragment;
 import com.naman14.timber.fragments.QueueFragment;
+import com.naman14.timber.fragments.SongsFragment;
 import com.naman14.timber.permissions.Nammu;
 import com.naman14.timber.permissions.PermissionCallback;
 import com.naman14.timber.slidinguppanel.SlidingUpPanelLayout;
@@ -64,6 +67,7 @@ import com.naman14.timber.subfragments.LyricsFragment;
 import com.naman14.timber.utils.Constants;
 import com.naman14.timber.utils.Helpers;
 import com.naman14.timber.utils.NavigationUtils;
+import com.naman14.timber.utils.PreferencesUtility;
 import com.naman14.timber.utils.TimberUtils;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -83,7 +87,9 @@ public class MainActivity extends BaseActivity implements ATEActivityThemeCustom
     private Handler navDrawerRunnable = new Handler();
     private Runnable runnable;
     private DrawerLayout mDrawerLayout;
+    //private SwipeRefreshLayout mSwipeRefreshLayout;
     private boolean isDarkTheme;
+    //private MainFragment fragment;
 
     private Runnable navigateLibrary = new Runnable() {
         public void run() {
@@ -91,7 +97,6 @@ public class MainActivity extends BaseActivity implements ATEActivityThemeCustom
             Fragment fragment = new MainFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             transaction.replace(R.id.fragment_container, fragment).commitAllowingStateLoss();
-
         }
     };
 
@@ -261,6 +266,8 @@ public class MainActivity extends BaseActivity implements ATEActivityThemeCustom
             });
         }
 
+        //mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.rating_update);
+        //mSwipeRefreshLayout.setOnRefreshListener(this);
     }
 
     private void loadEverything() {
@@ -507,6 +514,28 @@ public class MainActivity extends BaseActivity implements ATEActivityThemeCustom
 
         panelLayout.showPanel();
     }
+/*
+    @Override
+    public void onRefresh() {
+        final PreferencesUtility mPreferences = PreferencesUtility.getInstance(this);//?
+        if (!mPreferences.isRatingEnabled()) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }, 500);
+            return;
+        }
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mPreferences.setSongSortOrder("rating");
+                fragment.getSongsFragment().reloadAdapter();
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 1000);
+    }*/
 }
 
 

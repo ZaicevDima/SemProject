@@ -16,6 +16,7 @@
 
 package com.naman14.timber.provider;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -47,6 +48,7 @@ public class MusicDB extends SQLiteOpenHelper {
         RecentStore.getInstance(mContext).onCreate(db);
         SongPlayCount.getInstance(mContext).onCreate(db);
         SearchHistory.getInstance(mContext).onCreate(db);
+        RatingStore.getInstance(mContext).onCreate(db);
     }
 
     @Override
@@ -55,6 +57,7 @@ public class MusicDB extends SQLiteOpenHelper {
         RecentStore.getInstance(mContext).onUpgrade(db, oldVersion, newVersion);
         SongPlayCount.getInstance(mContext).onUpgrade(db, oldVersion, newVersion);
         SearchHistory.getInstance(mContext).onUpgrade(db, oldVersion, newVersion);
+        RatingStore.getInstance(mContext).onUpgrate(db, oldVersion, newVersion);
     }
 
     @Override
@@ -63,5 +66,6 @@ public class MusicDB extends SQLiteOpenHelper {
         RecentStore.getInstance(mContext).onDowngrade(db, oldVersion, newVersion);
         SongPlayCount.getInstance(mContext).onDowngrade(db, oldVersion, newVersion);
         SearchHistory.getInstance(mContext).onDowngrade(db, oldVersion, newVersion);
+        RatingStore.getInstance(mContext).onDowngrade(db, oldVersion, newVersion);
     }
 }

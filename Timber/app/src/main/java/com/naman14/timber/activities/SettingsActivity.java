@@ -37,8 +37,6 @@ import com.naman14.timber.utils.PreferencesUtility;
 
 public class SettingsActivity extends BaseThemedActivity implements ColorChooserDialog.ColorCallback, ATEActivityThemeCustomizer {
 
-    private String action;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
@@ -53,6 +51,9 @@ public class SettingsActivity extends BaseThemedActivity implements ColorChooser
         setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        //private String action
+        String action;
 
         action = getIntent().getAction();
 

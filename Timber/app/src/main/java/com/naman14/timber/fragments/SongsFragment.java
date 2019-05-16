@@ -14,12 +14,15 @@
 
 package com.naman14.timber.fragments;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -41,11 +44,13 @@ import com.naman14.timber.widgets.FastScroller;
 
 import java.util.List;
 
-public class SongsFragment extends Fragment implements MusicStateListener {
+public class SongsFragment extends Fragment implements MusicStateListener, SwipeRefreshLayout.OnRefreshListener {
 
     private SongsListAdapter mAdapter;
     private BaseRecyclerView recyclerView;
-    private PreferencesUtility mPreferences;
+    private PreferencesUtility mPreferences;;
+
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -56,9 +61,9 @@ public class SongsFragment extends Fragment implements MusicStateListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(
-                R.layout.fragment_recyclerview, container, false);
+                R.layout.fragment_songs, container, false);
 
-        recyclerView = rootView.findViewById(R.id.recyclerview);
+        recyclerView = rootView.findViewById(R.id.fragment_songs);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setEmptyView(getActivity(), rootView.findViewById(R.id.list_empty), "No media found");
         FastScroller fastScroller =  rootView.findViewById(R.id.fastscroller);
@@ -66,6 +71,9 @@ public class SongsFragment extends Fragment implements MusicStateListener {
 
         new loadSongs().execute("");
         ((BaseActivity) getActivity()).setMusicStateListenerListener(this);
+
+        mSwipeRefreshLayout = rootView.findViewById(R.id.rating_update);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
 
         return rootView;
     }
@@ -83,7 +91,7 @@ public class SongsFragment extends Fragment implements MusicStateListener {
             mAdapter.notifyDataSetChanged();
     }
 
-    private void reloadAdapter() {
+    public void reloadAdapter() {
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(final Void... unused) {
@@ -138,8 +146,57 @@ public class SongsFragment extends Fragment implements MusicStateListener {
                 mPreferences.setSongSortOrder(SortOrder.SongSortOrder.SONG_DURATION);
                 reloadAdapter();
                 return true;
+            case R.id.menu_sort_by_rating_of_songs:
+                //mPreferences.setSongSortOrder(SortOrder.SongSortOrder.RATING);
+                //reloadAdapter();
+                if (mPreferences.isRatingEnabled()) {
+                    mPreferences.setSongSortOrder("rating");
+                    reloadAdapter();
+                } else {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setTitle("Error")
+                            .setMessage("Выберите рейтинг")
+                            .setCancelable(true)
+                            .setPositiveButton("Ok",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                        }
+                                    })
+                            .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                @Override
+                                public void onCancel(DialogInterface dialog) {
+                                }
+                            });
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
+                return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onRefresh() {
+        final PreferencesUtility mPreferences = PreferencesUtility.getInstance(getActivity());
+        if (!mPreferences.isRatingEnabled()) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }, 500);
+            return;
+        }
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mPreferences.setSongSortOrder("rating");
+                reloadAdapter();
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 1000);
     }
 
     private class loadSongs extends AsyncTask<String, Void, String> {

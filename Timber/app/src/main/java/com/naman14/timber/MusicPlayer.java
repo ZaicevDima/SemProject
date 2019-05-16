@@ -15,17 +15,17 @@
 
 package com.naman14.timber;
 
-import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.IBinder;
@@ -36,19 +36,26 @@ import android.widget.Toast;
 
 import com.naman14.timber.dataloaders.SongLoader;
 import com.naman14.timber.helpers.MusicPlaybackTrack;
+import com.naman14.timber.provider.RatingStore;
+import com.naman14.timber.utils.PreferencesUtility;
+import com.naman14.timber.utils.TimberUtils;
 import com.naman14.timber.utils.TimberUtils.IdType;
 
 import java.util.Arrays;
 import java.util.WeakHashMap;
 
-import static android.support.v4.content.PermissionChecker.checkSelfPermission;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 public class MusicPlayer {
 
+    public static final int RATING_DECISION_LIMIT_MS = 10_000;
+    private static Context context;
     private static final WeakHashMap<Context, ServiceBinder> mConnectionMap;
     private static final long[] sEmptyList;
     public static ITimberService mService = null;
     private static ContentValues[] mContentValuesCache = null;
+    private static RatingStore ratingStore;
 
     static {
         mConnectionMap = new WeakHashMap<Context, ServiceBinder>();
@@ -96,10 +103,51 @@ public class MusicPlayer {
     public static void next() {
         try {
             if (mService != null) {
+                long position = position();
+                if (PreferencesUtility.getInstance(context).isRatingEnabled() && position <= RATING_DECISION_LIMIT_MS) {
+                    int songId = (int) getCurrentAudioId();
+                    ratingStore.setRating(songId, max(ratingStore.getRating(songId) - 1, RatingStore.MINVALUE));
+                    if (ratingStore.getRating(songId) == RatingStore.MINVALUE) {
+                        removeTrackDialog(songId);
+
+                    }
+                }
                 mService.next();
             }
         } catch (final RemoteException ignored) {
         }
+    }
+
+    private static void removeTrackDialog(final int songId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Remove track")
+                .setMessage("Do you want to delete this track?")
+                .setCancelable(true)
+                .setPositiveButton("Yes",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                long [] id = new long[1];
+                                id[0] = songId;
+                                TimberUtils.deleteTracks(context, id);
+                                dialog.dismiss();
+                            }
+                        })
+                .setNegativeButton("No",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                ratingStore.setRating(songId, RatingStore.MINVALUE + 1);
+                                dialog.dismiss();
+                            }
+                        })
+                .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
     public static void initPlaybackServiceWithSettings(final Context context) {
@@ -114,10 +162,17 @@ public class MusicPlayer {
 
     public static void previous(final Context context, final boolean force) {
         final Intent previous = new Intent(context, MusicService.class);
+        int songId = (int) getCurrentAudioId();
         if (force) {
             previous.setAction(MusicService.PREVIOUS_FORCE_ACTION);
+            if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
+                ratingStore.setRating(songId, min(ratingStore.getRating(songId) + 2, RatingStore.MAXVALUE));
+            }
         } else {
             previous.setAction(MusicService.PREVIOUS_ACTION);
+            if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
+                ratingStore.setRating((int)getPreviousAudioId(), min(ratingStore.getRating((int)getPreviousAudioId()) + 1, RatingStore.MAXVALUE));
+            }
         }
         context.startService(previous);
     }
@@ -162,7 +217,11 @@ public class MusicPlayer {
             if (mService != null) {
                 switch (mService.getShuffleMode()) {
                     case MusicService.SHUFFLE_NONE:
-                        mService.setShuffleMode(MusicService.SHUFFLE_NORMAL);
+                        if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
+                            mService.setShuffleMode(MusicService.SHUFFLE_RATING);
+                        } else {
+                            mService.setShuffleMode(MusicService.SHUFFLE_NORMAL);
+                        }
                         if (mService.getRepeatMode() == MusicService.REPEAT_CURRENT) {
                             mService.setRepeatMode(MusicService.REPEAT_ALL);
                         }
@@ -171,6 +230,9 @@ public class MusicPlayer {
                         mService.setShuffleMode(MusicService.SHUFFLE_NONE);
                         break;
                     case MusicService.SHUFFLE_AUTO:
+                        mService.setShuffleMode(MusicService.SHUFFLE_NONE);
+                        break;
+                    case MusicService.SHUFFLE_RATING:
                         mService.setShuffleMode(MusicService.SHUFFLE_NONE);
                         break;
                     default:
@@ -425,6 +487,7 @@ public class MusicPlayer {
     public static final int removeTrack(final long id) {
         try {
             if (mService != null) {
+                System.out.println("REMOVE" + id);
                 return mService.removeTrack(id);
             }
         } catch (final RemoteException ingored) {
@@ -517,8 +580,8 @@ public class MusicPlayer {
         try {
             mService.setShuffleMode(MusicService.SHUFFLE_NORMAL);
             if (getQueuePosition() == 0 && mService.getAudioId() == trackList[0] && Arrays.equals(trackList, getQueue())) {
-                    mService.play();
-                    return;
+                mService.play();
+                return;
             }
             mService.open(trackList, -1, -1, IdType.NA.mId);
             mService.play();
@@ -653,7 +716,7 @@ public class MusicPlayer {
     }
 
     public static void clearQueue() {
-        if (mService!=null) {
+        if (mService != null) {
             try {
                 mService.removeTracks(0, Integer.MAX_VALUE);
             } catch (final RemoteException ignored) {
@@ -762,6 +825,38 @@ public class MusicPlayer {
             }
         }
     }
+
+    public static void setContext(Context context) {
+        MusicPlayer.context = context;
+        ratingStore = RatingStore.getInstance(context);
+    }
+
+    //@Override
+    //public void onRefresh() {
+        /*if (!PreferencesUtility.getInstance(context).isRatingEnabled()) {
+            return;
+        }*/
+            //Toast.makeText(this, R.string.refresh_started, Toast.LENGTH_SHORT).show();
+        //mSwipeRefreshLayout.setRefreshing(false);
+
+        /*new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Отменяем анимацию обновления
+                mSwipeRefreshLayout.setRefreshing(false);
+                Random random = new Random();
+            }
+        }, 4000 );*/
+        //String currentDateTime = DateFormat.getDateTimeInstance().format(new Date());
+        /*new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeRefreshLayout.setRefreshing(false);
+                // говорим о том, что собираемся закончить
+                //Toast.makeText(MainActivity.this, R.string.refresh_finished, Toast.LENGTH_SHORT).show();
+            }
+        }, 300);*/
+    //}
 
     public static final class ServiceBinder implements ServiceConnection {
         private final ServiceConnection mCallback;

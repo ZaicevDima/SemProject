@@ -25,6 +25,9 @@
             <item
                 android:id="@+id/menu_sort_by_duration"
                 android:title="@string/sort_order_entry_duration"/>
+            <item
+                android:id="@+id/menu_sort_by_rating_of_songs"
+                android:title="Rating"/>
         </menu>
     </item>
 

@@ -14,18 +14,24 @@
 
 package com.naman14.timber.fragments;
 
+import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,12 +39,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.afollestad.appthemeengine.ATE;
 import com.naman14.timber.MusicPlayer;
 import com.naman14.timber.R;
 import com.naman14.timber.adapters.ArtistSongAdapter;
+import com.naman14.timber.dataloaders.AlbumSongLoader;
 import com.naman14.timber.dataloaders.ArtistLoader;
 import com.naman14.timber.dataloaders.ArtistSongLoader;
 import com.naman14.timber.dialogs.AddPlaylistDialog;
@@ -52,23 +60,30 @@ import com.naman14.timber.utils.ATEUtils;
 import com.naman14.timber.utils.Constants;
 import com.naman14.timber.utils.Helpers;
 import com.naman14.timber.utils.ImageUtils;
+import com.naman14.timber.utils.PreferencesUtility;
+import com.naman14.timber.utils.SortOrder;
 import com.naman14.timber.utils.TimberUtils;
+import com.naman14.timber.widgets.DividerItemDecoration;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
 import java.util.List;
+import java.util.Objects;
 
-public class ArtistDetailFragment extends Fragment {
+public class ArtistDetailFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private long artistID = -1;
     private ImageView artistArt;
     private Toolbar toolbar;
     private CollapsingToolbarLayout collapsingToolbarLayout;
     private AppBarLayout appBarLayout;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private boolean largeImageLoaded = false;
     private int primaryColor = -1;
     private ArtistSongAdapter mAdapter;
+    //private RecyclerView recyclerView;
+    private FrameLayout frameLayout;
 
     public static ArtistDetailFragment newInstance(long id, boolean useTransition, String transitionName) {
         ArtistDetailFragment fragment = new ArtistDetailFragment();
@@ -90,6 +105,7 @@ public class ArtistDetailFragment extends Fragment {
     }
 
 
+    @RequiresApi(21)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(
@@ -99,17 +115,27 @@ public class ArtistDetailFragment extends Fragment {
 
         collapsingToolbarLayout = (CollapsingToolbarLayout) rootView.findViewById(R.id.collapsing_toolbar);
         appBarLayout = (AppBarLayout) rootView.findViewById(R.id.app_bar);
+        //recyclerView = rootView.findViewById(R.id.recyclerview2);
+        frameLayout = rootView.findViewById(R.id.container);
 
         if (getArguments().getBoolean("transition")) {
             artistArt.setTransitionName(getArguments().getString("transition_name"));
         }
 
+        //recyclerView = rootView.findViewById(R.id.recyclerview); //???
+
         toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
+
+        //recyclerView.setEnabled(false);
+        //recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
         setupToolbar();
         setUpArtistDetails();
 
         getChildFragmentManager().beginTransaction().replace(R.id.container, ArtistMusicFragment.newInstance(artistID)).commit();
 
+        mSwipeRefreshLayout = rootView.findViewById(R.id.rating_update);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
 
         return rootView;
     }
@@ -128,7 +154,11 @@ public class ArtistDetailFragment extends Fragment {
         final Artist artist = ArtistLoader.getArtist(getActivity(), artistID);
         List<Song> songList = ArtistSongLoader.getSongsForArtist(getActivity(), artistID);
         mAdapter = new ArtistSongAdapter(getActivity(), songList, artistID);
-
+        //RecyclerView recyclerView = ArtistSongAdapter.getRecyclerView();
+        //recyclerView.setAdapter(mAdapter);
+        //RecyclerView recyclerView = getView().findViewById(R.id.container);
+        //RecyclerView recyclerView = (RecyclerView) frameLayout.getRootView();
+        //recyclerView.setAdapter(mAdapter);
         collapsingToolbarLayout.setTitle(artist.name);
 
         LastFmClient.getInstance(getActivity()).getArtistInfo(new ArtistQuery(artist.name), new ArtistInfoListener() {
@@ -237,6 +267,65 @@ public class ArtistDetailFragment extends Fragment {
             ATEUtils.setStatusBarColor(getActivity(), ateKey, primaryColor);
         }
 
+    }
+
+    @Override
+    public void onRefresh() {
+
+        final PreferencesUtility mPreferences = PreferencesUtility.getInstance(getActivity());
+        if (!mPreferences.isRatingEnabled()) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }, 500);
+            return;
+        }
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mPreferences.setArtistSongSortOrder("rating");
+                reloadAdapter();
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 1000);
+
+        /*final PreferencesUtility mPreferences = PreferencesUtility.getInstance(getActivity());
+        if (!mPreferences.isRatingEnabled()) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }, 500);
+            return;
+        }
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mPreferences.setAlbumSongSortOrder("rating");
+                reloadAdapter();
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 1000);*/
+    }
+
+    private void reloadAdapter() {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(final Void... unused) {
+                //List<Song> songList = AlbumSongLoader.getSongsForArtist(getActivity(), artistID);
+                List<Song> songList = ArtistSongLoader.getSongsForArtist(getActivity(),artistID);
+                mAdapter.updateDataSet(songList);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                mAdapter.notifyDataSetChanged();
+            }
+        }.execute();
     }
 
     private class setBlurredAlbumArt extends AsyncTask<Bitmap, Void, Drawable> {

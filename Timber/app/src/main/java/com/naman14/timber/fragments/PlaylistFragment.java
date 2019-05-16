@@ -23,6 +23,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -54,6 +55,8 @@ public class PlaylistFragment extends Fragment {
 
     private int playlistcount;
     private FragmentStatePagerAdapter adapter;
+    private SongsFragment songsFragment;
+
     private MultiViewPager pager;
     private RecyclerView recyclerView;
     private GridLayoutManager layoutManager;
@@ -169,7 +172,6 @@ public class PlaylistFragment extends Fragment {
         layoutManager.requestLayout();
         setItemDecoration();
     }
-
 
     public class SpacesItemDecoration extends RecyclerView.ItemDecoration {
         private int space;

@@ -14,7 +14,9 @@
 package com.naman14.timber.fragments;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -24,6 +26,7 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
@@ -69,7 +72,7 @@ import net.steamcrafted.materialiconlib.MaterialDrawableBuilder;
 
 import java.util.List;
 
-public class AlbumDetailFragment extends Fragment {
+public class AlbumDetailFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private long albumID = -1;
 
@@ -78,6 +81,7 @@ public class AlbumDetailFragment extends Fragment {
     private AppCompatActivity mContext;
 
     private RecyclerView recyclerView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private AlbumSongsAdapter mAdapter;
 
     private Toolbar toolbar;
@@ -122,21 +126,21 @@ public class AlbumDetailFragment extends Fragment {
         final View rootView = inflater.inflate(
                 R.layout.fragment_album_detail, container, false);
 
-        albumArt = (ImageView) rootView.findViewById(R.id.album_art);
-        artistArt = (ImageView) rootView.findViewById(R.id.artist_art);
-        albumTitle = (TextView) rootView.findViewById(R.id.album_title);
-        albumDetails = (TextView) rootView.findViewById(R.id.album_details);
+        albumArt = rootView.findViewById(R.id.album_art);
+        artistArt = rootView.findViewById(R.id.artist_art);
+        albumTitle = rootView.findViewById(R.id.album_title);
+        albumDetails = rootView.findViewById(R.id.album_details);
 
-        toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
+        toolbar = rootView.findViewById(R.id.toolbar);
 
-        fab = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        fab = rootView.findViewById(R.id.fab);
 
         if (getArguments().getBoolean("transition")) {
             albumArt.setTransitionName(getArguments().getString("transition_name"));
         }
-        recyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerview);
-        collapsingToolbarLayout = (CollapsingToolbarLayout) rootView.findViewById(R.id.collapsing_toolbar);
-        appBarLayout = (AppBarLayout) rootView.findViewById(R.id.app_bar);
+        recyclerView = rootView.findViewById(R.id.recyclerview);
+        collapsingToolbarLayout = rootView.findViewById(R.id.collapsing_toolbar);
+        appBarLayout = rootView.findViewById(R.id.app_bar);
         recyclerView.setEnabled(false);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
@@ -161,6 +165,9 @@ public class AlbumDetailFragment extends Fragment {
                 }, 150);
             }
         });
+
+        mSwipeRefreshLayout = rootView.findViewById(R.id.rating_update);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
 
         return rootView;
     }
@@ -339,6 +346,31 @@ public class AlbumDetailFragment extends Fragment {
                 mPreferences.setAlbumSongSortOrder(SortOrder.AlbumSongSortOrder.SONG_TRACK_LIST);
                 reloadAdapter();
                 return true;
+            case R.id.menu_sort_by_rating_of_songs:
+                if (mPreferences.isRatingEnabled()) {
+                    mPreferences.setAlbumSongSortOrder("rating");
+                    reloadAdapter();
+                } else {
+                    android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getActivity());
+                    builder.setTitle("Error")
+                            .setMessage("Выберите рейтинг")
+                            .setCancelable(true)
+                            .setPositiveButton("Ok",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                        }
+                                    })
+                            .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                @Override
+                                public void onCancel(DialogInterface dialog) {
+                                }
+                            });
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -354,6 +386,28 @@ public class AlbumDetailFragment extends Fragment {
             ATEUtils.setStatusBarColor(getActivity(), ateKey, primaryColor);
         }
 
+    }
+
+    @Override
+    public void onRefresh() {
+        final PreferencesUtility mPreferences = PreferencesUtility.getInstance(getActivity());
+        if (!mPreferences.isRatingEnabled()) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }, 500);
+            return;
+        }
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mPreferences.setAlbumSongSortOrder("rating");
+                reloadAdapter();
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 1000);
     }
 
     private class EnterTransitionListener extends SimplelTransitionListener {

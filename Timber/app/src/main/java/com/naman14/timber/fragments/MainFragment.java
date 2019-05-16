@@ -87,6 +87,7 @@ public class MainFragment extends Fragment {
     }
 
     private void setupViewPager(ViewPager viewPager) {
+        //songsFragment = new SongsFragment();
         Adapter adapter = new Adapter(getChildFragmentManager());
         adapter.addFragment(new SongsFragment(), this.getString(R.string.songs));
         adapter.addFragment(new AlbumFragment(), this.getString(R.string.albums));
@@ -114,6 +115,10 @@ public class MainFragment extends Fragment {
     public void onStart() {
         super.onStart();
     }
+
+    /*public SongsFragment getSongsFragment() {
+        return songsFragment;
+    }*/
 
     static class Adapter extends FragmentPagerAdapter {
         private final List<Fragment> mFragments = new ArrayList<>();

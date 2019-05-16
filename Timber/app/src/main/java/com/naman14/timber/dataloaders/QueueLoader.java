@@ -51,6 +51,9 @@ public class QueueLoader {
 
                 final int tracknumber = mCursor.getInt(6);
 
+                int rating = mCursor.getInt(8);
+
+                //final Song song = new Song(id, albumId, artistid, songName, artist, album, duration, tracknumber, rating);
                 final Song song = new Song(id, albumId, artistid, songName, artist, album, duration, tracknumber);
 
                 mSongList.add(song);

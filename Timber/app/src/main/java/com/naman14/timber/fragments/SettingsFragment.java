@@ -14,10 +14,14 @@
 
 package com.naman14.timber.fragments;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
@@ -34,6 +38,7 @@ import com.naman14.timber.activities.DonateActivity;
 import com.naman14.timber.activities.SettingsActivity;
 import com.naman14.timber.dialogs.LastFmLoginDialog;
 import com.naman14.timber.lastfmapi.LastFmClient;
+import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.utils.Constants;
 import com.naman14.timber.utils.NavigationUtils;
 import com.naman14.timber.utils.PreferencesUtility;
@@ -45,6 +50,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     private static final String LOCKSCREEN = "show_albumart_lockscreen";
     private static final String XPOSED = "toggle_xposed_trackselector";
+    private static final String RATING = "rating";
 
     private static final String KEY_ABOUT = "preference_about";
     private static final String KEY_SOURCE = "preference_source";
@@ -55,6 +61,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     private boolean lastFMlogedin;
 
     private Preference nowPlayingSelector,  lastFMlogin, lockscreen, xposed;
+    public static CheckBoxPreference rating;
 
     private SwitchPreference toggleAnimations;
     private ListPreference themePreference, startPagePreference;
@@ -73,6 +80,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         nowPlayingSelector = findPreference(NOW_PLAYING_SELECTOR);
 
         xposed = findPreference(XPOSED);
+        rating = (CheckBoxPreference) getPreferenceManager().findPreference(RATING);
 
         lastFMlogin = findPreference(LASTFM_LOGIN);
         updateLastFM();
@@ -154,8 +162,11 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         });
 
         lastFMlogin.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            private Preference preference;
+
             @Override
             public boolean onPreferenceClick(Preference preference) {
+                this.preference = preference;
                 if (lastFMlogedin) {
                     LastFmClient.getInstance(getActivity()).logout();
                     Bundle extras = new Bundle();
@@ -173,7 +184,49 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             }
         });
 
+        rating.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                mPreferences.setRatingEnabled(false);
+                if (rating.shouldDisableDependents()) {
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    final Activity activity = getActivity();
+                    builder.setTitle("Rating")
+                            .setMessage("Select rating mode")
+                            .setCancelable(true)
+                            .setPositiveButton("Use new raiting",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            mPreferences.setRatingEnabled(true);
+                                            RatingStore.getInstance(getActivity()).recreate();
+                                            dialog.dismiss();
+                                        }
+                                    })
+                            .setNegativeButton("Use old raiting",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            mPreferences.setRatingEnabled(true);
+                                            dialog.dismiss();
+                                        }
+                                    })
+                            .setOnCancelListener(new DialogInterface.OnCancelListener() {
+
+                                @Override
+                                public void onCancel(DialogInterface dialog) {
+                                }
+                            });
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
+                return true;
+            }
+        });
     }
+
+
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {

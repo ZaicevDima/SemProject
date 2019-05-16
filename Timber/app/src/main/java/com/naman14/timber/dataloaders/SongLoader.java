@@ -15,16 +15,23 @@
 package com.naman14.timber.dataloaders;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
+import android.provider.MediaStore.Audio.AudioColumns;
 import android.text.TextUtils;
 
 import com.naman14.timber.models.Song;
+import com.naman14.timber.provider.MusicDB;
+import com.naman14.timber.provider.RatingStore;
+import com.naman14.timber.provider.RatingStoreColumns;
 import com.naman14.timber.utils.PreferencesUtility;
+import com.naman14.timber.utils.SortOrder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +53,9 @@ public class SongLoader {
                 long artistId = cursor.getInt(6);
                 long albumId = cursor.getLong(7);
 
+
                 arrayList.add(new Song(id, albumId, artistId, title, artist, album, duration, trackNumber));
+                //arrayList.add(new Song(id, albumId, artistId, title, artist, album, duration, trackNumber, rating));
             }
             while (cursor.moveToNext());
         if (cursor != null)
@@ -54,7 +63,7 @@ public class SongLoader {
         return arrayList;
     }
 
-    public static Song getSongForCursor(Cursor cursor) {
+    public static Song getSongForCursor(Cursor cursor, Context context) {
         Song song = new Song();
         if ((cursor != null) && (cursor.moveToFirst())) {
             long id = cursor.getLong(0);
@@ -65,7 +74,10 @@ public class SongLoader {
             int trackNumber = cursor.getInt(5);
             long artistId = cursor.getInt(6);
             long albumId = cursor.getLong(7);
+            int rating = RatingStore.getInstance(context).getRating(id);
 
+
+            //song = new Song(id, albumId, artistId, title, artist, album, duration, trackNumber, rating);
             song = new Song(id, albumId, artistId, title, artist, album, duration, trackNumber);
         }
 
@@ -108,7 +120,7 @@ public class SongLoader {
         Cursor cursor = cr.query(uri, projection, selection + "=?", selectionArgs, sortOrder);
 
         if (cursor != null && cursor.getCount() > 0) {
-            Song song = getSongForCursor(cursor);
+            Song song = getSongForCursor(cursor, context);
             cursor.close();
             return song;
         }
@@ -125,7 +137,7 @@ public class SongLoader {
     }
 
     public static Song getSongForID(Context context, long id) {
-        return getSongForCursor(makeSongCursor(context, "_id=" + String.valueOf(id), null));
+        return getSongForCursor(makeSongCursor(context, "_id=" + String.valueOf(id), null), context);
     }
 
     public static List<Song> searchSongs(Context context, String searchString, int limit) {
@@ -139,7 +151,50 @@ public class SongLoader {
 
     public static Cursor makeSongCursor(Context context, String selection, String[] paramArrayOfString) {
         final String songSortOrder = PreferencesUtility.getInstance(context).getSongSortOrder();
+        if (songSortOrder.equals("rating")) {
+            return makeSongRatingCursor(context, selection, paramArrayOfString);
+        }
         return makeSongCursor(context, selection, paramArrayOfString, songSortOrder);
+    }
+
+    private static Cursor makeSongRatingCursor(Context context, String selection, String[] paramArrayOfString) {
+        Cursor cursor = makeSongCursor(context, selection, paramArrayOfString, SortOrder.SongSortOrder.SONG_A_Z);
+        MusicDB musicDB = MusicDB.getInstance(context);
+        SQLiteDatabase db = musicDB.getWritableDatabase();
+        db.execSQL("DROP TABLE IF EXISTS temp_table");
+        db.execSQL("CREATE TEMP TABLE IF NOT EXISTS " + "temp_table" + " ("
+                + AudioColumns._ID + " LONG NOT NULL PRIMARY KEY,"
+                + AudioColumns.TITLE + " STRING NOT NULL,"
+                + AudioColumns.ARTIST + " STRING NOT NULL,"
+                + AudioColumns.ALBUM + " STRING NOT NULL,"
+                + AudioColumns.DURATION + " LONG NOT NULL,"
+                + AudioColumns.TRACK + " STRING NOT NULL,"
+                + AudioColumns.ARTIST_ID + " LONG NOT NULL,"
+                + AudioColumns.ALBUM_ID + " LONG NOT NULL);"
+                );
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put("_id", cursor.getLong(0));
+            contentValues.put("title", cursor.getString(1));
+            contentValues.put("artist", cursor.getString(2));
+            contentValues.put("album", cursor.getString(3));
+            contentValues.put("duration", cursor.getLong(4));
+            contentValues.put("track", cursor.getString(5));
+            contentValues.put("artist_id", cursor.getLong(6));
+            contentValues.put("album_id", cursor.getLong(7));
+            db.insert("temp_table", null, contentValues);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        String query = "SELECT _id, title, artist, album, duration, track, artist_id, album_id" +
+                " FROM temp_table LEFT JOIN " + RatingStoreColumns.NAME +
+                " ON temp_table._id = " + RatingStoreColumns.ID +
+                " ORDER BY IFNULL(" + RatingStoreColumns.RATING + "," + RatingStore.DEFAULT + ") DESC;";
+        //String query2 = "SELECT COUNT(" + RatingStoreColumns.ID + ") FROM " + RatingStoreColumns.NAME  + ";" ;
+
+
+        return db.rawQuery(query, null);
     }
 
     private static Cursor makeSongCursor(Context context, String selection, String[] paramArrayOfString, String sortOrder) {
@@ -164,6 +219,7 @@ public class SongLoader {
                 mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM),
                 Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)),
                 0
+                //5
         );
     }
 

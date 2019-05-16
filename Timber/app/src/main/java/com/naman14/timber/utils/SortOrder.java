@@ -66,7 +66,6 @@ public final class SortOrder {
 
         /* Album sort order year */
         String ALBUM_YEAR = MediaStore.Audio.Albums.FIRST_YEAR + " DESC";
-
     }
 
     /**
@@ -96,6 +95,8 @@ public final class SortOrder {
 
         /* Song sort order filename */
         String SONG_FILENAME = MediaStore.Audio.Media.DATA;
+
+        String RATING = "rating";
     }
 
     /**
@@ -146,6 +147,8 @@ public final class SortOrder {
 
         /* Artist song sort order filename */
         String SONG_FILENAME = SongSortOrder.SONG_FILENAME;
+
+        String SONG_RATING = SongSortOrder.RATING;
     }
 
     /**

@@ -19,9 +19,6 @@
             <item
                 android:id="@+id/menu_sort_by_artist"
                 android:title="@string/sort_order_entry_artist"/>
-            <item
-                android:id="@+id/menu_sort_by_number_of_songs"
-                android:title="@string/sort_order_entry_number_of_songs"/>
         </menu>
     </item>
 

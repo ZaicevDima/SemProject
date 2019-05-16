@@ -23,6 +23,7 @@ import android.provider.MediaStore.Audio.AudioColumns;
 import android.util.Log;
 
 import com.naman14.timber.MusicPlayer;
+import com.naman14.timber.models.Song;
 
 import java.util.Arrays;
 
@@ -50,6 +51,8 @@ public class NowPlayingCursor extends AbstractCursor {
             AudioColumns.ARTIST_ID,
 
             AudioColumns.TRACK,
+
+            Song.RATING,
     };
 
     private final Context mContext;
