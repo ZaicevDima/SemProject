@@ -1472,7 +1472,17 @@ public class MusicService extends Service {
                     }
                 }
             } else {
-                shufmode = SHUFFLE_RATING;
+                if (shufmode != SHUFFLE_RATING && shufmode != SHUFFLE_NORMAL) {
+                    shufmode = SHUFFLE_NONE;
+                }
+                if (shufmode != SHUFFLE_NONE) {
+                    mHistory = mPlaybackStateStore.getHistory(mPlaylist.size());
+                }
+                if (shufmode == SHUFFLE_RATING) {
+                    if (!makeAutoShuffleList()) {
+                        shufmode = SHUFFLE_NONE;
+                    }
+                }
             }
             mShuffleMode = shufmode;
         }

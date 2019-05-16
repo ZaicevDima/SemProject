@@ -46,7 +46,9 @@ import com.naman14.timber.dataloaders.SongLoader;
 import com.naman14.timber.fragments.SettingsFragment;
 import com.naman14.timber.helpers.MusicPlaybackTrack;
 import com.naman14.timber.provider.RatingStore;
+import com.naman14.timber.provider.RecentStore;
 import com.naman14.timber.utils.PreferencesUtility;
+import com.naman14.timber.utils.TimberUtils;
 import com.naman14.timber.utils.TimberUtils.IdType;
 
 import java.util.Arrays;
@@ -137,7 +139,9 @@ public class MusicPlayer {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                removeTrack(songId);
+                                long [] id = new long[1];
+                                id[0] = songId;
+                                TimberUtils.deleteTracks(context, id);
                                 dialog.dismiss();
                             }
                         })
@@ -225,7 +229,11 @@ public class MusicPlayer {
             if (mService != null) {
                 switch (mService.getShuffleMode()) {
                     case MusicService.SHUFFLE_NONE:
-                        mService.setShuffleMode(MusicService.SHUFFLE_NORMAL);
+                        if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
+                            mService.setShuffleMode(MusicService.SHUFFLE_RATING);
+                        } else {
+                            mService.setShuffleMode(MusicService.SHUFFLE_NORMAL);
+                        }
                         if (mService.getRepeatMode() == MusicService.REPEAT_CURRENT) {
                             mService.setRepeatMode(MusicService.REPEAT_ALL);
                         }
@@ -237,7 +245,8 @@ public class MusicPlayer {
                         mService.setShuffleMode(MusicService.SHUFFLE_NONE);
                         break;
                     case MusicService.SHUFFLE_RATING:
-                        mService.setShuffleMode(MusicService.SHUFFLE_RATING);
+                        mService.setShuffleMode(MusicService.SHUFFLE_NONE);
+                        break;
                     default:
                         break;
                 }
@@ -490,6 +499,7 @@ public class MusicPlayer {
     public static final int removeTrack(final long id) {
         try {
             if (mService != null) {
+                System.out.println("REMOVE" + id);
                 return mService.removeTrack(id);
             }
         } catch (final RemoteException ingored) {
@@ -829,6 +839,7 @@ public class MusicPlayer {
     }
 
     public static void setContext(Context context) {
+        MusicPlayer.context = context;
         ratingStore = RatingStore.getInstance(context);
     }
 
