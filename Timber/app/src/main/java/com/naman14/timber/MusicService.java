@@ -66,7 +66,6 @@ import android.support.v7.graphics.Palette;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.naman14.timber.fragments.MainFragment;
 import com.naman14.timber.helpers.MediaButtonIntentReceiver;
 import com.naman14.timber.helpers.MusicPlaybackTrack;
 import com.naman14.timber.lastfmapi.LastFmClient;
@@ -74,7 +73,6 @@ import com.naman14.timber.lastfmapi.models.LastfmUserSession;
 import com.naman14.timber.lastfmapi.models.ScrobbleQuery;
 import com.naman14.timber.permissions.Nammu;
 import com.naman14.timber.provider.MusicPlaybackState;
-import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.provider.RecentStore;
 import com.naman14.timber.provider.SongPlayCount;
 import com.naman14.timber.utils.NavigationUtils;
@@ -1000,7 +998,7 @@ public class MusicService extends Service {
             doAutoShuffleUpdate();
             return mPlayPos + 1;
         } else if (mShuffleMode == SHUFFLE_RATING) {
-            int size = 0;
+            /*int size = 0;
 
             mCursor.moveToFirst();
             while (!mCursor.isAfterLast()) {
@@ -1035,8 +1033,62 @@ public class MusicService extends Service {
                 return -1;
             } else {
                 return mPlayPos + 1;
+            }*/
+            final int numTracks = mPlaylist.size();
+
+
+            final int[] trackNumPlays = new int[numTracks];
+            for (int i = 0; i < numTracks; i++) {
+                trackNumPlays[i] = 0;
             }
+
+
+            final int numHistory = mHistory.size();
+            for (int i = 0; i < numHistory; i++) {
+                final int idx = mHistory.get(i).intValue();
+                if (idx >= 0 && idx < numTracks) {
+                    trackNumPlays[idx]++;
+                }
+            }
+
+            if (mPlayPos >= 0 && mPlayPos < numTracks) {
+                trackNumPlays[mPlayPos]++;
+            }
+
+            int minNumPlays = Integer.MAX_VALUE;
+            int numTracksWithMinNumPlays = 0;
+            for (int i = 0; i < trackNumPlays.length; i++) {
+                if (trackNumPlays[i] < minNumPlays) {
+                    minNumPlays = trackNumPlays[i];
+                    numTracksWithMinNumPlays = 1;
+                } else if (trackNumPlays[i] == minNumPlays) {
+                    numTracksWithMinNumPlays++;
+                }
+            }
+
+
+            if (minNumPlays > 0 && numTracksWithMinNumPlays == numTracks
+                    && mRepeatMode != REPEAT_ALL && !force) {
+                return -1;
+            }
+
+
+            int skip = mShuffler.nextInt(numTracksWithMinNumPlays);
+            for (int i = 0; i < trackNumPlays.length; i++) {
+                if (trackNumPlays[i] == minNumPlays) {
+                    if (skip == 0) {
+                        return i;
+                    } else {
+                        skip--;
+                    }
+                }
+            }
+
+            if (D)
+                Log.e(TAG, "Getting the next position resulted did not get a result when it should have");
+            return -1;
         }
+        return mPlayPos + 1;
     }
 
     private void setNextTrack() {
@@ -1640,7 +1692,7 @@ public class MusicService extends Service {
                     mShuffleMode = SHUFFLE_NONE;
                 }
             } else if (mShuffleMode == SHUFFLE_RATING) {
-                setNextRatingTrack();
+                setNextTrack();
             }
             else {
                 setNextTrack();

@@ -35,11 +35,9 @@ import com.afollestad.appthemeengine.prefs.ATEColorPreference;
 import com.afollestad.materialdialogs.color.ColorChooserDialog;
 import com.naman14.timber.R;
 import com.naman14.timber.activities.DonateActivity;
-import com.naman14.timber.activities.MainActivity;
 import com.naman14.timber.activities.SettingsActivity;
 import com.naman14.timber.dialogs.LastFmLoginDialog;
 import com.naman14.timber.lastfmapi.LastFmClient;
-import com.naman14.timber.provider.MusicDB;
 import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.utils.Constants;
 import com.naman14.timber.utils.NavigationUtils;
@@ -195,7 +193,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                     final Activity activity = getActivity();
                     builder.setTitle("Rating")
-                            .setMessage("Выберите рейтинг")
+                            .setMessage("Select rating mode")
                             .setCancelable(true)
                             .setPositiveButton("Use new raiting",
                                     new DialogInterface.OnClickListener() {

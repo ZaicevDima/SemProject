@@ -28,35 +28,22 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.preference.Preference;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
-import java.text.DateFormat;
 
 import com.naman14.timber.dataloaders.SongLoader;
-import com.naman14.timber.fragments.SettingsFragment;
 import com.naman14.timber.helpers.MusicPlaybackTrack;
 import com.naman14.timber.provider.RatingStore;
-import com.naman14.timber.provider.RecentStore;
 import com.naman14.timber.utils.PreferencesUtility;
 import com.naman14.timber.utils.TimberUtils;
 import com.naman14.timber.utils.TimberUtils.IdType;
 
 import java.util.Arrays;
-import java.util.Date;
-import java.util.Random;
 import java.util.WeakHashMap;
 
-import static android.app.PendingIntent.getActivity;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -122,6 +109,7 @@ public class MusicPlayer {
                     ratingStore.setRating(songId, max(ratingStore.getRating(songId) - 1, RatingStore.MINVALUE));
                     if (ratingStore.getRating(songId) == RatingStore.MINVALUE) {
                         removeTrackDialog(songId);
+
                     }
                 }
                 mService.next();
