@@ -38,4 +38,8 @@
         android:id="@+id/popup_song_delete"
         android:title="@string/delete_from_device" />
 
+    <item
+        android:id="@+id/get_rating"
+        android:title="@string/get_rating" />
+
 </menu>
