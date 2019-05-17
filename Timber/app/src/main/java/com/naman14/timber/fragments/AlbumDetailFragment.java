@@ -47,7 +47,6 @@ import com.afollestad.appthemeengine.ATE;
 import com.afollestad.appthemeengine.Config;
 import com.naman14.timber.MusicPlayer;
 import com.naman14.timber.R;
-import com.naman14.timber.activities.MainActivity;
 import com.naman14.timber.adapters.AlbumSongsAdapter;
 import com.naman14.timber.dataloaders.AlbumLoader;
 import com.naman14.timber.dataloaders.AlbumSongLoader;
@@ -353,7 +352,7 @@ public class AlbumDetailFragment extends Fragment implements SwipeRefreshLayout.
                 } else {
                     android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getActivity());
                     builder.setTitle("Error")
-                            .setMessage("Выберите рейтинг")
+                            .setMessage("Select rating mode")
                             .setCancelable(true)
                             .setPositiveButton("Ok",
                                     new DialogInterface.OnClickListener() {

@@ -127,7 +127,7 @@ public class MusicPlayer {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                long [] id = new long[1];
+                                long[] id = new long[1];
                                 id[0] = songId;
                                 TimberUtils.deleteTracks(context, id);
                                 dialog.dismiss();
@@ -163,17 +163,23 @@ public class MusicPlayer {
     public static void previous(final Context context, final boolean force) {
         final Intent previous = new Intent(context, MusicService.class);
         int songId = (int) getCurrentAudioId();
+        long position = position();
+
         if (force) {
-            previous.setAction(MusicService.PREVIOUS_FORCE_ACTION);
-            if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
+            if (PreferencesUtility.getInstance(context).isRatingEnabled() && position > 3_000) {
                 ratingStore.setRating(songId, min(ratingStore.getRating(songId) + 2, RatingStore.MAXVALUE));
+            } else if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
+                ratingStore.setRating((int) getPreviousAudioId(), min(ratingStore.getRating((int) getPreviousAudioId()) + 1, RatingStore.MAXVALUE));
             }
+            previous.setAction(MusicService.PREVIOUS_FORCE_ACTION);
         } else {
             previous.setAction(MusicService.PREVIOUS_ACTION);
-            if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
-                ratingStore.setRating((int)getPreviousAudioId(), min(ratingStore.getRating((int)getPreviousAudioId()) + 1, RatingStore.MAXVALUE));
+            if (PreferencesUtility.getInstance(context).isRatingEnabled() && position > 3_000) {
+                ratingStore.setRating(songId, min(ratingStore.getRating(songId) + 2, RatingStore.MAXVALUE));
+            } else if (PreferencesUtility.getInstance(context).isRatingEnabled() && position <= 3_000) {
+                ratingStore.setRating((int) getPreviousAudioId(), min(ratingStore.getRating((int) getPreviousAudioId()) + 1, RatingStore.MAXVALUE));
             }
-        }
+         }
         context.startService(previous);
     }
 
@@ -836,8 +842,8 @@ public class MusicPlayer {
         /*if (!PreferencesUtility.getInstance(context).isRatingEnabled()) {
             return;
         }*/
-            //Toast.makeText(this, R.string.refresh_started, Toast.LENGTH_SHORT).show();
-        //mSwipeRefreshLayout.setRefreshing(false);
+    //Toast.makeText(this, R.string.refresh_started, Toast.LENGTH_SHORT).show();
+    //mSwipeRefreshLayout.setRefreshing(false);
 
         /*new Handler().postDelayed(new Runnable() {
             @Override
@@ -847,7 +853,7 @@ public class MusicPlayer {
                 Random random = new Random();
             }
         }, 4000 );*/
-        //String currentDateTime = DateFormat.getDateTimeInstance().format(new Date());
+    //String currentDateTime = DateFormat.getDateTimeInstance().format(new Date());
         /*new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {

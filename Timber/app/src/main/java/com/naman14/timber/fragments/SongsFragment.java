@@ -155,7 +155,7 @@ public class SongsFragment extends Fragment implements MusicStateListener, Swipe
                 } else {
                     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                     builder.setTitle("Error")
-                            .setMessage("Выберите рейтинг")
+                            .setMessage("Select rating mode")
                             .setCancelable(true)
                             .setPositiveButton("Ok",
                                     new DialogInterface.OnClickListener() {
