@@ -15,6 +15,8 @@
 package com.naman14.timber.adapters;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -30,6 +32,7 @@ import com.naman14.timber.MusicPlayer;
 import com.naman14.timber.R;
 import com.naman14.timber.dialogs.AddPlaylistDialog;
 import com.naman14.timber.models.Song;
+import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.utils.NavigationUtils;
 import com.naman14.timber.utils.TimberUtils;
 
@@ -115,6 +118,26 @@ public class AlbumSongsAdapter extends BaseSongAdapter<AlbumSongsAdapter.ItemHol
                             case R.id.popup_song_delete:
                                 long[] deleteIds = {arraylist.get(position).id};
                                 TimberUtils.showDeleteDialog(mContext,arraylist.get(position).title, deleteIds, AlbumSongsAdapter.this, position);
+                                break;
+                            case R.id.get_rating:
+                                AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                                builder.setTitle("Rating")
+                                        .setMessage("Rating of this song = " + RatingStore.getInstance(mContext).getRating(arraylist.get(position).id))
+                                        .setCancelable(true)
+                                        .setPositiveButton("Ok",
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        dialog.dismiss();
+                                                    }
+                                                })
+                                        .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                            @Override
+                                            public void onCancel(DialogInterface dialog) {
+                                            }
+                                        });
+                                AlertDialog alert = builder.create();
+                                alert.show();
                                 break;
                         }
                         return false;

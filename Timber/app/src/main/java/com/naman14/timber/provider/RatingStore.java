@@ -6,8 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 public class RatingStore {
-    public static final int DEFAULT = 5;
-    public static final int MAXVALUE = 10;
+    public static final int DEFAULT = 50;
+    public static final int MAXVALUE = 100;
     public static final int MINVALUE = 0;
 
 

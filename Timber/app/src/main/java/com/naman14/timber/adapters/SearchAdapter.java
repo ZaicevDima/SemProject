@@ -15,6 +15,8 @@
 package com.naman14.timber.adapters;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -36,6 +38,7 @@ import com.naman14.timber.lastfmapi.models.LastfmArtist;
 import com.naman14.timber.models.Album;
 import com.naman14.timber.models.Artist;
 import com.naman14.timber.models.Song;
+import com.naman14.timber.provider.RatingStore;
 import com.naman14.timber.utils.NavigationUtils;
 import com.naman14.timber.utils.TimberUtils;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -182,6 +185,26 @@ public class SearchAdapter extends BaseSongAdapter<SearchAdapter.ItemHolder> {
                                 break;
                             case R.id.popup_song_addto_playlist:
                                 AddPlaylistDialog.newInstance(((Song) searchResults.get(position))).show(((AppCompatActivity) mContext).getSupportFragmentManager(), "ADD_PLAYLIST");
+                                break;
+                            case R.id.get_rating:
+                                AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                                builder.setTitle("Rating")
+                                        .setMessage("Rating of this song = " + RatingStore.getInstance(mContext).getRating(((Song) searchResults.get(position)).id))
+                                        .setCancelable(true)
+                                        .setPositiveButton("Ok",
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        dialog.dismiss();
+                                                    }
+                                                })
+                                        .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                            @Override
+                                            public void onCancel(DialogInterface dialog) {
+                                            }
+                                        });
+                                AlertDialog alert = builder.create();
+                                alert.show();
                                 break;
                         }
                         return false;
