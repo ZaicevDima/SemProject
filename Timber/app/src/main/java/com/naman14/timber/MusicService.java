@@ -149,7 +149,7 @@ public class MusicService extends Service {
     private static final int FADEDOWN = 6;
     private static final int FADEUP = 7;
     private static final int IDLE_DELAY = 5 * 60 * 1000;
-    private static final long REWIND_INSTEAD_PREVIOUS_THRESHOLD = 3000;
+    public static final long REWIND_INSTEAD_PREVIOUS_THRESHOLD = 5000;
     private static final String[] PROJECTION = new String[]{
             "audio._id AS _id", MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA,

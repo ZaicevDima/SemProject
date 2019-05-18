@@ -166,17 +166,17 @@ public class MusicPlayer {
         long position = position();
 
         if (force) {
-            if (PreferencesUtility.getInstance(context).isRatingEnabled() && position > 3_000) {
+            if (PreferencesUtility.getInstance(context).isRatingEnabled() && position > MusicService.REWIND_INSTEAD_PREVIOUS_THRESHOLD) {
                 ratingStore.setRating(songId, min(ratingStore.getRating(songId) + 2, RatingStore.MAXVALUE));
-            } else if (PreferencesUtility.getInstance(context).isRatingEnabled()) {
+            } else if (PreferencesUtility.getInstance(context).isRatingEnabled() && position <= MusicService.REWIND_INSTEAD_PREVIOUS_THRESHOLD) {
                 ratingStore.setRating((int) getPreviousAudioId(), min(ratingStore.getRating((int) getPreviousAudioId()) + 1, RatingStore.MAXVALUE));
             }
             previous.setAction(MusicService.PREVIOUS_FORCE_ACTION);
         } else {
             previous.setAction(MusicService.PREVIOUS_ACTION);
-            if (PreferencesUtility.getInstance(context).isRatingEnabled() && position > 3_000) {
+            if (PreferencesUtility.getInstance(context).isRatingEnabled() && position > MusicService.REWIND_INSTEAD_PREVIOUS_THRESHOLD) {
                 ratingStore.setRating(songId, min(ratingStore.getRating(songId) + 2, RatingStore.MAXVALUE));
-            } else if (PreferencesUtility.getInstance(context).isRatingEnabled() && position <= 3_000) {
+            } else if (PreferencesUtility.getInstance(context).isRatingEnabled() && position <= MusicService.REWIND_INSTEAD_PREVIOUS_THRESHOLD) {
                 ratingStore.setRating((int) getPreviousAudioId(), min(ratingStore.getRating((int) getPreviousAudioId()) + 1, RatingStore.MAXVALUE));
             }
          }
